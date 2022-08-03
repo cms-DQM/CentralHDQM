@@ -11,7 +11,7 @@ Base = declarative_base()
 # SQLite will be used if no production DB credentials will be found
 dir_path = os.path.dirname(os.path.realpath(__file__))
 db_string = 'sqlite:///' + os.path.join(dir_path, 'hdqm.db')
-engine = sqlalchemy.create_engine(db_string)
+engine = sqlalchemy.create_engine(db_string + "?check_same_thread=False")
 Session = sessionmaker(bind=engine)
 session = Session()
 
