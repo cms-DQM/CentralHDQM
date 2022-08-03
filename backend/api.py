@@ -88,7 +88,7 @@ def get_data( json = True ):
     points = eval(trend.points)
     trends_data = []
 
-    for run in runs:
+    for run in reversed(runs):
 
       if not run.rr_significant : continue
 
