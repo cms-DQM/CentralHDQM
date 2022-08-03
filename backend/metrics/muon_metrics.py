@@ -1,4 +1,4 @@
-from basic import BaseMetric
+from .basic import BaseMetric
 
 class NOutsideRange(BaseMetric):
     def __init__(self, low, high):

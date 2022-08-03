@@ -11,7 +11,6 @@ from decouple import config
 headers = {"content-type": "application/x-www-form-urlencoded"}
 
 def exchange_tokens(token):
-    config("CLIENT_ID")
     data = {
         "client_id": config("CLIENT_ID"),
         "client_secret": config("CLIENT_SECRET"),
@@ -36,7 +35,7 @@ def exchange_tokens(token):
         return "Error: " + str(e)
 
 
-def get_token():
+def get_token( log ):
     data = {
         "client_id": config("CLIENT_ID"),
         "client_secret": config("CLIENT_SECRET"),
@@ -65,5 +64,5 @@ def get_token():
         return data_access_token
 
     except Exception as e:
-        print(str(e))
+        log.warning(str(e))
         return "Error: " + str(e)

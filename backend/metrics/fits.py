@@ -1,4 +1,10 @@
-from basic import BaseMetric
+from .basic import BaseMetric
+
+import os
+import ROOT
+from ROOT import TF1
+
+VERBOSE = False
 
 class LanGau(BaseMetric):
     def __init__(self, diseredParameter, minVal, maxVal, controlVal, paramDefaults):
@@ -10,13 +16,9 @@ class LanGau(BaseMetric):
         self.controlVal = controlVal 
         
     def calculate(self, histo):
-        import os
         langauPath = os.path.join(os.path.dirname(__file__), 'langau.c')
-        import ROOT
         ROOT.gSystem.CompileMacro(langauPath, "k-")
         ROOT.gSystem.Load(langauPath)
-        from ROOT import langaufun
-        from ROOT import TF1
         fit = TF1("langau",langaufun, self.range[0],self.range[1],4)
         if(histo.GetEntries()<150):
             histo.Rebin(2)
@@ -30,7 +32,7 @@ class LanGau(BaseMetric):
         control = 0
         while control < 5 :
             if(fit.GetParameter(0)<self.controlVal or fit.GetParameter(1)<self.range[0]):
-                print "########### REFIT #######"
+                if VERBOSE: print("########### REFIT #######")
                 fit.SetParameters(*(self.parameters))
                 if(histo.GetBinCenter(histo.GetMaximumBin())>self.range[0]):
                     fit.SetParameter(1,histo.GetBinCenter(histo.GetMaximumBin()))
@@ -41,7 +43,7 @@ class LanGau(BaseMetric):
                 histo.Fit(fit,"QO","",self.range[0]-2,self.range[1])
                 control=control+1
             else:
-                print "##### GOOD #####"
+                if VERBOSE: print("##### GOOD #####")
                 control = 5
         result = (fit.GetMaximumX(), fit.GetParError(self.desired))
         del fit
@@ -56,7 +58,6 @@ class GauLand(BaseMetric):
         self.desired = diseredParameter
         
     def calculate(self, histo):
-        from ROOT import TF1
         fit = TF1("landau","[2]*TMath::Landau(x,[0],[1],0)+[4]*TMath::Gaus(x,[0],[3])", *(self.range))
         fit.SetParameters(*(self.parameters))
         fit.SetParameter(2,histo.GetMaximum()/2)
@@ -78,13 +79,12 @@ class Landau(BaseMetric):
         self.desired = diseredParameter
         
     def calculate(self, histo):
-        from ROOT import TF1
         fit = TF1("landau","[2]*TMath::Landau(x,[0],[1],0)", *(self.range))
         fit.SetParameters(*(self.parameters))
         #3x to stabilise minimization
         histo.Fit(fit,"QOR")
         histo.Fit(fit,"QOR")
-        histo.Fit(fit,"OR")
+        histo.Fit(fit,"QOR")
         if (fit.GetParameter(self.desired)>0) :
             result = (fit.GetParameter(self.desired), fit.GetParError(self.desired))
         else :
@@ -103,13 +103,12 @@ class LandauTest(BaseMetric):
         self.desired = diseredParameter
         
     def calculate(self, histo):
-        from ROOT import TF1
         if self._run >= self.turn :
-            print "Range 2"
+            if VERBOSE: print("Range 2")
             fit = TF1("landau","[2]*TMath::Landau(x,[0],[1],0)", *(self.range2))
             fit.SetParameters(*(self.parameters))
         else :
-            print "Range 1"
+            if VERBOSE: print("Range 1")
             fit = TF1("landau","[2]*TMath::Landau(x,[0],[1],0)", *(self.range1))
             fit.SetParameters(*(self.parameters))
             fit.SetParameter(0,fit.GetParameter(0)*1.58)
@@ -117,7 +116,7 @@ class LandauTest(BaseMetric):
         #3x to stabilise minimization
         histo.Fit(fit,"QOR")
         histo.Fit(fit,"QOR")
-        histo.Fit(fit,"OR")
+        histo.Fit(fit,"QOR")
         if (fit.GetParameter(self.desired)>0 and fit.GetParameter(self.desired)<60000) :
             result = (fit.GetParameter(self.desired), fit.GetParError(self.desired))
         else :
@@ -134,13 +133,12 @@ class LandauAroundMaxBin(BaseMetric):
         self.theWidth = width
         
     def calculate(self, histo):
-        from ROOT import TF1
         maxbincenter = histo.GetBinCenter( histo.GetMaximumBin() )
         self.range = [maxbincenter - self.theWidth , maxbincenter + self.theWidth]
         #3x to stabilise minimization
         histo.Fit("landau","QOR","",*(self.range))
         histo.Fit("landau","QOR","",*(self.range))
-        histo.Fit("landau","OR","",*(self.range))
+        histo.Fit("landau","QOR","",*(self.range))
         func = histo.GetFunction("landau")
         result = (func.GetParameter(self.desired), func.GetParError(self.desired))
         return result
@@ -155,7 +153,6 @@ class LandauAroundMax(BaseMetric):
         self.cut = hLimit
         
     def calculate(self, histo):
-        from ROOT import TF1
         maxbin=histo.GetMaximumBin()
         if histo.GetBinContent(maxbin-1) > histo.GetBinContent(maxbin+1) :
             maxbin2=maxbin-1
@@ -171,7 +168,7 @@ class LandauAroundMax(BaseMetric):
         #3x to stabilise minimization
         histo.Fit(fit,"QOR","",*(self.range))
         histo.Fit(fit,"QOR","",*(self.range))
-        histo.Fit(fit,"OR","",*(self.range))
+        histo.Fit(fit,"QOR","",*(self.range))
         if (fit.GetParameter(self.desired)>0 and fit.GetParameter(self.desired)<self.cut) :
             result = (fit.GetParameter(self.desired), fit.GetParError(self.desired))
         else :
@@ -189,7 +186,6 @@ class Gaussian(BaseMetric):
         self.desired = diseredParameter
         
     def calculate(self, histo):
-        from ROOT import TF1
         fit = TF1("gaus","[2]*TMath::Gaus(x,[0],[1],0)", *(self.range))
         fit.SetParameters(*(self.parameters))
         histo.Fit(fit,"QOR")
@@ -206,7 +202,6 @@ class FlatLine(BaseMetric):
         self.desired = diseredParameter
         
     def calculate(self, histo):
-        from ROOT import TF1
         fit = TF1("pol0","[0]", *(self.range))
         fit.SetParameter(0,self.parameter)
         histo.Fit(fit,"QOR")
@@ -224,7 +219,6 @@ class FlatLineXcut(BaseMetric):
         self.desired = diseredParameter
         
     def calculate(self, histo):
-        from ROOT import TF1
         Nbins = histo.GetNbinsX()
         NN=0
         for xbin in range(Nbins):

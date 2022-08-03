@@ -1,4 +1,4 @@
-from basic import BaseMetric
+from .basic import BaseMetric
 #find the map at http://cmsdoc.cern.ch/cms/HCALdocs/document/Mapping/Yuan/2020-feb-12/Lmap
 #HCAL map, rbx -> (eta, phi, depth) 
 hcal_map = {

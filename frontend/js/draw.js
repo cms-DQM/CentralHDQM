@@ -380,7 +380,7 @@ const plotter = (function() {
                     run:                trend.run,
                     series_index:       i,
                     duration_readable:  helpers.secondsToHHMMSS(trend.oms_info.duration),
-                    del_lumi:           helpers.toExponential(trend.oms_info.delivered_lumi, 3),
+                    del_lumi:           trend.oms_info.delivered_lumi,
                     start_time:         trend.oms_info.start_time,
                     end_time:           trend.oms_info.end_time
                 }))
