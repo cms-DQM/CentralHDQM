@@ -214,6 +214,7 @@ def do_tests():
 if __name__ == '__main__':
   #do_tests()
   #exit()
+  db.create_session()
 
   port=5000
   if len(sys.argv) >= 2:
