@@ -32,13 +32,21 @@ def get_oms_run(run, log):
       oms_runs_json  = response.json()
 
     oms_attributes = oms_runs_json["data"][0]["attributes"]
-    oms_attributes_meta = oms_runs_json["data"][0]["meta"]["row"]
+    oms_attributes_meta = None
 
-    lumis = ["delivered_lumi", "recorded_lumi", "end_lumi"]
-    for lumi in lumis:
-      if lumi in oms_attributes_meta:
-        if "units" in oms_attributes_meta[lumi]:
-          oms_attributes[lumi] = str(oms_attributes[lumi]) + " x " + oms_attributes_meta[lumi]["units"]
+    try:
+      oms_attributes_meta = oms_runs_json["data"][0]["meta"]["row"]
+    except Exception as error_log:
+      log.warning("Failed to get OMS meta for run %s ..., skip without units" % run)
+      log.warning('Error ... %s ' % error_log)
+      units = "0"
+
+    if oms_attributes_meta : 
+      lumis = ["delivered_lumi", "recorded_lumi", "end_lumi"]
+      for lumi in lumis:
+        if lumi not in oms_attributes_meta: continue
+        if "units" not in oms_attributes_meta[lumi]: continue
+        oms_attributes[lumi] = str(oms_attributes[lumi]) + " x " + oms_attributes_meta[lumi]["units"]
 
     oms_data = oms_attributes
  

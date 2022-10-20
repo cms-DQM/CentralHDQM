@@ -10,12 +10,22 @@ MIN_LUMI_FOR_COLLISIONS = 0.1
 MIN_DURATION_FOR_COSMICS = 3600
 
 def is_significant( rr_data, rr_run_class ):
-  if 'special' in rr_data['oms_attributes']['hlt_key'].lower():
-    return False
-  elif 'collision' in rr_run_class.lower(): 
-    if rr_data['oms_attributes']['recorded_lumi'] >= MIN_LUMI_FOR_COLLISIONS: return True
-  elif 'cosmic' in rr_run_class.lower():
-    if rr_data['oms_attributes']['duration'] >= MIN_DURATION_FOR_COSMICS: return True
+  if 'oms_attributes' not in rr_data : return False
+
+  if 'hlt_key' in rr_data : 
+    if 'special' in rr_data['oms_attributes']['hlt_key'].lower():
+      return False
+
+  if 'collision' in rr_run_class.lower():
+    if 'recorded_lumi' in rr_data['oms_attributes']:
+      if rr_data['oms_attributes']['recorded_lumi']:
+        if rr_data['oms_attributes']['recorded_lumi'] >= MIN_LUMI_FOR_COLLISIONS: return True
+
+  if 'cosmic' in rr_run_class.lower() :
+    if 'duration' in rr_data['oms_attributes'] :
+      if rr_data['oms_attributes']['duration'] :
+        if rr_data['oms_attributes']['duration'] >= MIN_DURATION_FOR_COSMICS: return True
+
   return False
   
 
@@ -58,7 +68,14 @@ def get_rr_run( run, log ):
       # 2. For collision runs integrated luminosity has to be greater than 0.1 1/pb
       # 3. For cosmic runs duration has to be longer than 1 hour
       rr_run_class   = rr_data['rr_attributes']['class']
-      rr_significant = is_significant( rr_data, rr_run_class )
+      try:
+        rr_significant = is_significant( rr_data, rr_run_class )
+      except Exception as error_log:
+        log.warning("Cant check significance in RR data for run %s ..., will think as not significant" % run)
+        log.warning('Error ... %s ' % error_log)
+        log.warning('RR answer = "%s" ' % response.text)
+        rr_significant = False
+
       answer = { "rr_run_class" : rr_run_class, "rr_significant" : rr_significant }
       return answer
     except Exception as error_log:

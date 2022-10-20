@@ -1,3 +1,4 @@
+# P.S.~Mandrik, IHEP, 2022, https://github.com/pmandrik
 
 import os
 import sqlalchemy
@@ -14,6 +15,21 @@ db_string = 'sqlite:///' + os.path.join(dir_path, 'hdqm.db')
 engine = sqlalchemy.create_engine(db_string + "?check_same_thread=False")
 Session = sessionmaker(bind=engine)
 session = Session()
+
+# SQLite will be used if no production DB credentials will be found
+session = None
+def create_session( db_string = None ):
+  if not db_string:
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    db_string = 'sqlite:///' + os.path.join(dir_path, 'hdqm_v3.db')
+    engine = sqlalchemy.create_engine(db_string + "?check_same_thread=False")
+    Session = sessionmaker(bind=engine)
+  else :
+    engine = sqlalchemy.create_engine( db_string )
+    Session = sessionmaker(bind=engine)
+
+  global session
+  session = Session()
 
 # ~10k Files
 # ~1k  MEs

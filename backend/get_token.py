@@ -6,15 +6,19 @@ import os
 import sys
 
 from cachetools import cached, TTLCache
-from decouple import config
+
+from extra import *
+CLIENT_ID     = get_env_secret( None, "CLIENT_ID" )
+CLIENT_SECRET = get_env_secret( None, "CLIENT_SECRET" )
+AUDIENCE      = get_env_secret( None, "AUDIENCE" )
 
 headers = {"content-type": "application/x-www-form-urlencoded"}
 
 def exchange_tokens(token):
     data = {
-        "client_id": config("CLIENT_ID"),
-        "client_secret": config("CLIENT_SECRET"),
-        "audience": config("AUDIENCE"),
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "audience": AUDIENCE,
         "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
         "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
         "subject_token": token,
@@ -37,9 +41,9 @@ def exchange_tokens(token):
 
 def get_token( log ):
     data = {
-        "client_id": config("CLIENT_ID"),
-        "client_secret": config("CLIENT_SECRET"),
-        "audience": config("AUDIENCE"),
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "audience": AUDIENCE,
         "grant_type": "client_credentials",
     }
 

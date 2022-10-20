@@ -1,5 +1,6 @@
+# P.S.~Mandrik, IHEP, 2022, https://github.com/pmandrik
 
-import sys
+import sys, os
 import contextlib
 
 ### DQM classes
@@ -73,9 +74,31 @@ def get_plot_path(path, run):
 ### update trends informations with data points
 import bisect
 def add_point_to_trend(trend, dataset, trend_cfg, run, value, error, log):
-  points = eval(trend.points)
-  # log.info('Run %s duplicate point in trend "%s" dataset "%s" "%s" config "%s" "%s"' % (str(run), trend.subsystem, dataset.stream, dataset.reco_path, trend_cfg.name, trend_cfg.plot_title) )
-  points[ run ] = [ value, error ]
+  trend.points.replace("inf", "0")
+  try:
+    points = eval(trend.points)
+    # log.info('Run %s duplicate point in trend "%s" dataset "%s" "%s" config "%s" "%s"' % (str(run), trend.subsystem, dataset.stream, dataset.reco_path, trend_cfg.name, trend_cfg.plot_title) )
+    points[ run ] = [ value, error ]
+  except Exception as error_log:
+    log.info('Failed to add point to trend %s/%s' % ( trend_cfg.name, trend_cfg.cfg_path ) )
+    log.info('Trend points %s' % ( str(trend.points) ) )
+    log.info('Error ... %s ' % error_log)
+    return False
   trend.points = str( points )
+  return True
+
+### ges enviroment
+def get_env_secret(log, secret_name):
+  env_secret=None
+  try : 
+    env_secret = os.environ[secret_name]
+  except Exception as error_log:
+    if log:
+      log.warning( "get_env_secret(): can't load DQM_PASSWORD cookie" )
+      log.warning( repr(error_log) )
+    else:
+      print( "get_env_secret(): can't load DQM_PASSWORD cookie" )
+      print( repr(error_log) )
+  return env_secret
 
 

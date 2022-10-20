@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# P.S.~Mandrik, IHEP, 2022, https://github.com/pmandrik
 # python3 -m pip install -r requirements.txt -t .python_packages/python3
 # export PYTHONPATH=$PYTHONPATH:.python_packages/python3/
 
@@ -12,7 +13,7 @@ import re
 import ROOT
 import errno
 import argparse
-import os, sys
+import os, sys, math
 from collections import defaultdict
 
 import logging
@@ -27,7 +28,7 @@ CFGFILES = 'cfg/*/*.ini'
 NLOGS = 10
 GUIDATADIR = '/eos/cms/store/group/comm_dqm/DQMGUI_data'
 GUIDATADIR = '/eos/cms/store/group/comm_dqm/DQMGUI_data/Run2022/MinimumBias/0003557xx/'
-GUIDATADIR = '/eos/cms/store/group/comm_dqm/DQMGUI_data/Run2022/*/*/'
+GUIDATADIR = '/eos/cms/store/group/comm_dqm/DQMGUI_data/*/*/*/'
 GUIDATAPATTERN = 'DQM_V*DQMIO.root'
 PDPATTERN = re.compile('DQM_V\d+_R\d+__(.+__.+__.+)[.]root') # PD inside the file name
 VERSIONPATTERN = re.compile('(DQM_V)(\d+)(.+[.]root)')
@@ -161,8 +162,16 @@ def process_gui_root(file, trend_cfgs, mes, log):
       with nostdout(): # supress metrics stdout & stderr
         value, error = metric_func.calculate(main_hist)
     except Exception as error_log:
-      log.info('Unable to calculate the metric for trend/cfg %s/%s, skip' % ( trend_cfg.name, trend_cfg.cfg_path ) )
-      log.info('Error ... %s ' % error_log)
+      log.warning('Unable to calculate the metric for trend/cfg %s/%s, skip' % ( trend_cfg.name, trend_cfg.cfg_path ) )
+      log.warning('Error ... %s ' % error_log)
+      continue
+
+    if math.isinf( value ):
+      log.warning('Inf metric responce value for trend/cfg %s/%s, skip' % ( trend_cfg.name, trend_cfg.cfg_path ) )
+      continue
+
+    if math.isinf( error ):
+      log.warning('Inf metric responce error for trend/cfg %s/%s, skip' % ( trend_cfg.name, trend_cfg.cfg_path ) )
       continue
 
     # add new [run , value, error ] point to the trend
@@ -199,8 +208,12 @@ if __name__ == '__main__':
   log.info("Start " + str(__file__))
   log.info("Create %s log file" % LOGPATH)
   
-  # some metrics pop up canvases -_-
+  ### some metrics pop up canvases -_-
   ROOT.gROOT.SetBatch(True)
+
+  ### get path to the db
+  db_path = get_env_secret( log, "HDQM2_DB_PATH" )
+  db.create_session( db_path )
 
   ### read configs
   log.info("Glob confing files from %s" % CFGFILES)
