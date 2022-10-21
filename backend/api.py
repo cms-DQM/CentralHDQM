@@ -214,7 +214,9 @@ def do_tests():
 if __name__ == '__main__':
   #do_tests()
   #exit()
-  db.create_session()
+  from extra import *
+  db_path = get_env_secret( None, "HDQM2_DB_PATH" )
+  db.create_session( db_path )
 
   port=5000
   if len(sys.argv) >= 2:

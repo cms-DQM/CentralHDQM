@@ -10,15 +10,13 @@ from sqlalchemy.sql import select
 Base = declarative_base()
 
 # SQLite will be used if no production DB credentials will be found
-dir_path = os.path.dirname(os.path.realpath(__file__))
-db_string = 'sqlite:///' + os.path.join(dir_path, 'hdqm.db')
-engine = sqlalchemy.create_engine(db_string + "?check_same_thread=False")
-Session = sessionmaker(bind=engine)
-session = Session()
-
-# SQLite will be used if no production DB credentials will be found
 session = None
+engine  = None
+
 def create_session( db_string = None ):
+  global session
+  global engine
+
   if not db_string:
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db_string = 'sqlite:///' + os.path.join(dir_path, 'hdqm_v3.db')
@@ -28,7 +26,6 @@ def create_session( db_string = None ):
     engine = sqlalchemy.create_engine( db_string )
     Session = sessionmaker(bind=engine)
 
-  global session
   session = Session()
 
 # ~10k Files
@@ -200,7 +197,11 @@ def setup_db():
   Base.metadata.create_all(engine)
 
 if __name__ == '__main__':
+  ### get path to the db
+  db_path = get_env_secret( None, "HDQM2_DB_PATH" )
+  create_session( db_path )
   setup_db()
+
 
 
 
