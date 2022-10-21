@@ -1,0 +1,13 @@
+[Unit]
+Description=An HDQM Extract
+
+[Service]
+WorkingDirectory=/data/hdqm2/current/backend
+ExecStart=/data/hdqm2/current/backend/run.sh extract
+User=cmsdqm
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+

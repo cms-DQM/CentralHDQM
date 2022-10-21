@@ -1,0 +1,10 @@
+[Unit]
+Description=An HDQM API server
+
+[Service]
+WorkingDirectory=/data/hdqm2/current/backend
+ExecStart=/data/hdqm2/current/backend/run.sh api
+User=cmsdqm
+
+[Install]
+WantedBy=multi-user.target
