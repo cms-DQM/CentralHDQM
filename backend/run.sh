@@ -13,5 +13,22 @@ if [ "$1" = "api" ]; then
 fi
 
 if [ "$1" = "extract" ]; then
-  python3 dqm_extractor.py
+  export RELEASE=/cvmfs/cms.cern.ch/slc7_amd64_gcc10/cms/cmssw/CMSSW_12_4_5
+  source /cvmfs/cms.cern.ch/cmsset_default.sh
+  cd $RELEASE
+  eval `scramv1 runtime -sh`
+  cd -
+
+  while true ; do
+    kinit -kt /data/hdqm/.keytab cmsdqm
+    /usr/bin/eosfusebind -g
+
+    db_name="$(mktemp --dry-run hdqm_XXXXXXXX.db)"
+    echo $db_name
+    # cp hdqm_v3.db $db_name
+    python3 dqm_extractor.py
+    sleep 3d
+    #exit
+  done
 fi
+
