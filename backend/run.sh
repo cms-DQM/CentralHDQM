@@ -6,9 +6,10 @@ then
     exit
 fi
 
-export PYTHONPATH=$(cd ../; pwd)/.python_packages/python3:$PYTHONPATH
+source .env
 
 if [ "$1" = "api" ]; then
+  export PYTHONPATH=$(cd ../; pwd)/.python_packages/python3:$PYTHONPATH
   python3 api.py
 fi
 
@@ -18,6 +19,7 @@ if [ "$1" = "extract" ]; then
   cd $RELEASE
   eval `scramv1 runtime -sh`
   cd -
+  export PYTHONPATH=$(cd ../; pwd)/.python_packages/python3:$PYTHONPATH
 
   while true ; do
     kinit -kt /data/hdqm/.keytab cmsdqm
