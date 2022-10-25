@@ -90,6 +90,9 @@ const main = (function() {
                     y_title: group.y_title,
                     name: group.name,
                     correlation: group.correlation,
+                    subsystem : $("#subsystem-select").val(),
+                    pd        : $("#pd-select").val(),
+                    ps        : $("#processing-string-select").val(),
                     series: []
                 }
 
@@ -112,6 +115,13 @@ const main = (function() {
                         y_title: series.metadata.y_title,
                         name: series.metadata.name,
                         correlation: false,
+                        relative_path  : series.metadata.relative_path,
+                        histo1_path    : series.metadata.histo1_path,
+                        histo2_path    : series.metadata.histo2_path,
+                        reference_path : series.metadata.reference_path,
+                        subsystem : $("#subsystem-select").val(),
+                        pd        : $("#pd-select").val(),
+                        ps        : $("#processing-string-select").val(),
                         series: [series]
                     }
                     data.push(plotData)
@@ -278,10 +288,15 @@ const main = (function() {
             
             omsLink.attr("href", "https://cmsoms.cern.ch/cms/runs/report?cms_run=" + dataPoint.run)
             rrLink.attr("href", "https://cmsrunregistry.web.cern.ch/offline/workspaces/global?run_number=" + dataPoint.run)
-            guiLink.attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
+            // guiLink.attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
+            guiLink.attr("href", `${config.getBaseAPIUrl()}/expand_url?plot_id=${String(plotData.name)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_gui_url`)
 
-            $("#main-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
-            $("#gui-main-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_image_url`)
+            // $("#main-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
+            // $("#gui-main-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_image_url`)
+
+            $("#main-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?plot_id=${String(plotData.name)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_gui_url`)
+            $("#gui-main-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?plot_id=${String(plotData.name)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_image_url`)
+
             $(".fs-run").text(dataPoint.run)
         },
 

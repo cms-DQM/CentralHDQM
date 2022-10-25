@@ -113,6 +113,10 @@ def get_data( json = True ):
         'subsystem': subsystem, 
         'pd': pd, ### why we return what we requested ???
         'processing_string': processing_string,
+        'relative_path' : config.relative_path,
+        'histo1_path' : config.histo1_path,
+        'histo2_path' : config.histo2_path,
+        'reference_path' : config.reference_path,
         },
       'trends': trends_data } ]
 
@@ -156,42 +160,75 @@ def get_runs( json = True  ):
   return runs 
 
 ###
+import re
+PDPATTERN = re.compile('DQM_V\d+_R\d+__(.+__.+__.+)[.]root') # PD inside the file name
 @app.route('/api/expand_url', methods=['GET'])
 def expand_url():
-  return jsonify({'message': 'Not supported'}), 500
 
-  valid_url_types = [
-    'main_gui_url', 'main_image_url', 
-    'optional1_gui_url', 'optional1_image_url', 
-    'optional2_gui_url', 'optional2_image_url', 
-    'reference_gui_url', 'reference_image_url'
-  ]
+  valid_url_types = {
+    'main_gui_url' : 'relative_path', 'main_image_url' : 'relative_path', 
+    'optional1_gui_url' : 'histo1_path', 'optional1_image_url' : 'histo1_path', 
+    'optional2_gui_url' : 'histo2_path', 'optional2_image_url' : 'histo2_path', 
+    'reference_gui_url' : 'reference_path', 'reference_image_url' : 'reference_path'
+  }
 
   url_type = request.args.get('url_type')
   run = request.args.get('run', type=int)
-  dataset = request.args.get('dataset', type=str)
-  me_path = request.args.get('me_path', type=str)
+  plot_id = request.args.get('plot_id', type=str)
+  subsystem = request.args.get('subsystem', type=str)
+  pd = request.args.get('pd', type=str)
+  ps = request.args.get('ps', type=str)
+
+  if run == None:
+    return jsonify({'message': 'Please provide a run parameter.'}), 400
+
+  if plot_id == None:
+    return jsonify({'message': 'Please provide a plot_id parameter.'}), 400
+
+  if subsystem == None:
+    return jsonify({'message': 'Please provide a subsystem parameter.'}), 400
+
+  if pd == None:
+    return jsonify({'message': 'Please provide a pd parameter.'}), 400
+
+  if ps == None:
+    return jsonify({'message': 'Please provide a ps parameter.'}), 400
 
   if url_type not in valid_url_types:
     return jsonify({
       'message': 'Please provide a valid url_type parameter. Accepted values are: %s' % ','.join(valid_url_types)
     }), 400
 
-  if run == None:
-    return jsonify({'message': 'Please provide a run parameter.'}), 400
+  config = db.session.query( db.Config ).where( db.Config.name == plot_id, db.Config.subsystem == subsystem ).first()
+  if not config:
+    return jsonify( { 'message': 'Can not find config with subsystem, plot_id = \'' + str(subsystem) + "', '" + str(plot_id) + "'" } ), 400
 
-  if dataset == None:
-    return jsonify({'message': 'Please provide a dataset parameter.'}), 400
+  getter = valid_url_types[ url_type ]
+  me_path = getattr(config, getter)
+  
+  # where reco_path = 'PromptReco' and stream = 'Cosmics' and run = '335614';
+  gui_file = db.session.query( db.GUIFile ).where( db.GUIFile.reco_path == ps, db.Config.stream == pd, db.Config.run == str(run) ).first()
+  if not gui_file:
+    return jsonify( { 'message': 'Can not find GUIFile with reco_path, stream, run = \'' + str(reco_path) + "', '" + str(stream) + "', '" + str(run) + "'" } ), 400
 
-  if me_path == None:
-    return jsonify({'message': 'Please provide a me_path parameter.'}), 400
-
+  dataset = ''
+  pd_match = PDPATTERN.findall( gui_file.path )
+  if len(pd_match) :
+    dataset = '/' + pd_match[0].replace('__', '/')
+  else :
+    return jsonify( { 'message': 'Can find dataset in eos file path \'' + gui_file.path + "'" } ), 400
+  
   plot_folder = '/'.join(me_path.split('/')[:-1])
   DQMGUI = 'https://cmsweb.cern.ch/dqm/offline/'
   gui_url = '%sstart?runnr=%s;dataset=%s;workspace=Everything;root=%s;focus=%s;zoom=yes;' % (DQMGUI, run, dataset, plot_folder, me_path)
   image_url = '%splotfairy/archive/%s%s/%s?v=1510330581101995531;w=1906;h=933' % (DQMGUI, run, dataset, me_path)
 
-  return jsonify({'message': 'Error getting the url from the DB.'}), 500
+  url = gui_url
+  if 'image' in url_type : url = image_url
+
+  url = url.replace('+', '%2B')
+  return redirect(url, code=302)
+  ### return jsonify({'message': 'Error getting the url from the DB.'}), 500
 
 ### 
 @app.route('/api/')
