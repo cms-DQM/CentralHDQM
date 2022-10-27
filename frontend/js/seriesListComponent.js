@@ -64,7 +64,7 @@ const seriesListComponent = (function() {
                 try {
                     this.showSpinner()
                     const base = config.getBaseAPIUrl()
-                    const url = `${base}/data?series_id=${series_id}&from_run=${runFrom}&to_run=${runTo}`
+                    const url = `${base}/data?trend_id=${series_id}&from_run=${runFrom}&to_run=${runTo}&subsystem=${subsystem}&pd=${pd}&processing_string=${ps}`
                     const response = await fetch(url, {
                         credentials: "same-origin"
                     })
@@ -207,11 +207,11 @@ const seriesListComponent = (function() {
                 if(selected_trend_id == 0)
                     value = element.oms_info.duration
                 else if(selected_trend_id == 1)
-                    value = element.oms_info.delivered_lumi
+                    value = parce_lumi( element.oms_info.delivered_lumi )
                 else if(selected_trend_id == 2)
-                    value = element.oms_info.recorded_lumi
+                    value = parce_lumi( element.oms_info.recorded_lumi )
                 else if(selected_trend_id == 3)
-                    value = element.oms_info.end_lumi
+                    value = parce_lumi( element.oms_info.end_lumi )
                 else if(selected_trend_id == 4)
                     value = element.oms_info.b_field
                 else if(selected_trend_id == 5)

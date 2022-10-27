@@ -230,14 +230,14 @@ if __name__ == '__main__':
   trend_cfgs, mes = read_cfgs( config_files, log )
   log.info("Count " + str(len(trend_cfgs)) + " Trends" )
   log.info("Count " + str(len(mes)) + " MEs" )
-  log.info("--------------------Trends & MEs stat:" )
 
   trend_dic = defaultdict( list )
   try:
     for item in trend_cfgs :
-      subsystem = item.relative_path.split("/")[0]
+      subsystem = item.subsystem
       if not subsystem : 
-        subsystem = item.relative_path.split("/")[1]
+        subsystem = item.relative_path.split("/")[0]
+        if not subsystem : subsystem = item.relative_path.split("/")[1]
       trend_dic[ subsystem ] += [ item ]
   except Exception as error_log:
     log.info('Could not count Trends per subsystem ...')
@@ -257,9 +257,13 @@ if __name__ == '__main__':
     log.info('Error ... %s ' % error_log)
     exit()
 
+  log.info("--------------------Trends stat:" )
   for key, val in trend_dic.items():
-    mes_val = mes_dic.get(key, None)
-    log.info( key + " : " + str(len(val)) + " " + str(len(mes_val)) )
+    log.info( key + " : " + str(len(val)) )
+
+  log.info("--------------------MEs stat:" )
+  for key, val in trend_dic.items():
+    log.info( key + " : " + str(len(val)) )
 
   for key, val in mes_dic.items():
     if key in trend_dic : continue

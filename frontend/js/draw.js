@@ -380,7 +380,7 @@ const plotter = (function() {
                     run:                trend.run,
                     series_index:       i,
                     duration_readable:  helpers.secondsToHHMMSS(trend.oms_info.duration),
-                    del_lumi:           trend.oms_info.delivered_lumi,
+                    del_lumi:           parce_lumi(trend.oms_info.delivered_lumi),
                     start_time:         trend.oms_info.start_time,
                     end_time:           trend.oms_info.end_time
                 }))
@@ -482,7 +482,7 @@ const plotter = (function() {
             const yErr = plotData.series.map(x => x.trends.map(y => y.error))
             const fills = plotData.series[0].trends.map(x => x.oms_info.fill_number)
             const durations = plotData.series[0].trends.map(x => x.oms_info.duration)
-            const deliveredLumis = plotData.series[0].trends.map(x => x.oms_info.delivered_lumi)
+            const deliveredLumis = plotData.series[0].trends.map(x => parce_lumi(x.oms_info.delivered_lumi))
             const seriesTitles = plotData.series.map(x => x.metadata.plot_title)
 
             const meanAndRms = helpers.calculateMeanAndRMS(yValues)
@@ -615,11 +615,11 @@ const plotter = (function() {
                     y_readable:         helpers.toExponential(trend.value, 2),
                     error_readable:     helpers.toExponential(trend.error, 2),
                     run:                trend.run,
-                    del_lumi:           trend.oms_info.delivered_lumi,
+                    del_lumi:           parce_lumi( trend.oms_info.delivered_lumi ),
                     duration:           trend.oms_info.duration,
                     series_index:       i,
                     duration_readable:  helpers.secondsToHHMMSS(trend.oms_info.duration),
-                    del_lumi_readable:  helpers.toExponential(trend.oms_info.delivered_lumi, 3),
+                    del_lumi_readable:  helpers.toExponential(parce_lumi(trend.oms_info.delivered_lumi), 3),
                     start_time:         trend.oms_info.start_time,
                     end_time:           trend.oms_info.end_time
                 }))
@@ -894,7 +894,7 @@ const plotter = (function() {
                     run:                trend.run,
                     series_index:       i,
                     duration_readable:  helpers.secondsToHHMMSS(trend.oms_info.duration),
-                    del_lumi:           helpers.toExponential(trend.oms_info.delivered_lumi, 3),
+                    del_lumi:           helpers.toExponential( parce_lumi(trend.oms_info.delivered_lumi), 3),
                     start_time:         trend.oms_info.start_time,
                     end_time:           trend.oms_info.end_time
                 }))

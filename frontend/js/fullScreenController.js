@@ -136,6 +136,7 @@ const fullScreenController = (function(){
         fillRunData: function() 
         {
             const dataPoint = this.plotData.series[this.seriesIndex].trends[this.xIndex]
+            const expand_url = `${config.getBaseAPIUrl()}/expand_url?trend_id=${String(this.plotData.trend_id)}&subsystem=${String(this.plotData.subsystem)}&pd=${String(this.plotData.pd)}&ps=${String(this.plotData.ps)}&run=${String(dataPoint.run)}`
 
             $("#fs-value-series").html(String(this.plotData.series[this.seriesIndex].metadata.plot_title))
             $("#fs-value-value").html(String(dataPoint.value))
@@ -158,25 +159,25 @@ const fullScreenController = (function(){
 			      $("#fs-value-l1t-rate").html(String(dataPoint.oms_info.l1_rate) + " <i>Hz</i>")
 
             $("#fs-value-oms-url").attr("href", `https://cmsoms.cern.ch/cms/runs/report?cms_run=${dataPoint.run}`)
-            $("#fs-value-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
+            $("#fs-value-gui-url").attr("href", `${expand_url}&url_type=main_gui_url`)
             $("#fs-value-rr-url").attr("href", `https://cmsrunregistry.web.cern.ch/offline/workspaces/global?run_number=${dataPoint.run}`)
             
             $(".fs-run").html(String(dataPoint.run))
 
-            $("#fs-gui-main-plot-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_image_url`)
-            $("#fs-gui-opt1-plot-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=optional1_image_url`)
-            $("#fs-gui-opt2-plot-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=optional2_image_url`)
-            $("#fs-gui-reference-plot-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=reference_image_url`)
+            $("#fs-gui-main-plot-image").attr("src", `${expand_url}&url_type=main_image_url`)
+            $("#fs-gui-opt1-plot-image").attr("src", `${expand_url}&url_type=optional1_image_url`)
+            $("#fs-gui-opt2-plot-image").attr("src", `${expand_url}&url_type=optional2_image_url`)
+            $("#fs-gui-reference-plot-image").attr("src", `${expand_url}&url_type=reference_image_url`)
 
-            $("#main-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
-            $("#opt1-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=optional1_gui_url`)
-            $("#opt2-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=optional2_gui_url`)
-            $("#reference-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=reference_gui_url`)
+            $("#main-plot-gui-url").attr("href", `${expand_url}&url_type=main_gui_url`)
+            $("#opt1-plot-gui-url").attr("href", `${expand_url}&url_type=optional1_gui_url`)
+            $("#opt2-plot-gui-url").attr("href", `${expand_url}&url_type=optional2_gui_url`)
+            $("#reference-plot-gui-url").attr("href", `${expand_url}&url_type=reference_gui_url`)
 
-            $("#gui-main-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_image_url`)
-            $("#gui-opt1-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=optional1_image_url`)
-            $("#gui-opt2-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=optional2_image_url`)
-            $("#gui-reference-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=reference_image_url`)
+            $("#gui-main-plot-modal-image").attr("src", `${expand_url}&url_type=main_image_url`)
+            $("#gui-opt1-plot-modal-image").attr("src", `${expand_url}&url_type=optional1_image_url`)
+            $("#gui-opt2-plot-modal-image").attr("src", `${expand_url}&url_type=optional2_image_url`)
+            $("#gui-reference-plot-modal-image").attr("src", `${expand_url}&url_type=reference_image_url`)
 
             $("#gui-plot-modal-run").text(dataPoint.run)
         },

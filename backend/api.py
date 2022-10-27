@@ -21,8 +21,7 @@ def get_data( json = True ):
     runs = None
     #runs = [ 355708, 355710, 355711 ]
     latest = 50
-    series = 355711
-    series_id = None
+    trend_id = 0
   else : 
     ### old HDQM code
     subsystem = request.args.get('subsystem')
@@ -32,19 +31,16 @@ def get_data( json = True ):
     to_run = request.args.get('to_run', type=int)
     runs = request.args.get('runs')
     latest = request.args.get('latest', type=int)
-    series = request.args.get('series')
-    series_id = request.args.get('series_id', type=int)
-    series_id = None
+    trend_id = request.args.get('trend_id', type=int)
 
-    if series_id == None:
-      if subsystem == None:
-        return jsonify({'message': 'Please provide a subsystem parameter.'}), 400
+    if subsystem == None:
+      return jsonify({'message': 'Please provide a subsystem parameter.'}), 400
 
-      if pd == None:
-        return jsonify({'message': 'Please provide a pd parameter.'}), 400
+    if pd == None:
+      return jsonify({'message': 'Please provide a pd parameter.'}), 400
 
-      if processing_string == None:
-        return jsonify({'message': 'Please provide a processing_string parameter.'}), 400
+    if processing_string == None:
+      return jsonify({'message': 'Please provide a processing_string parameter.'}), 400
 
     modes = 0
     if from_run != None and to_run != None: modes += 1
@@ -60,9 +56,6 @@ def get_data( json = True ):
         runs = [int(x) for x in runs]
       except:
         return jsonify({'message': 'runs parameter is not valid. It has to be a comma separated list of integers.'}), 400
-
-    if series and series_id:
-      return jsonify({'message': 'series and series_id can not be defined at the same time.'}), 400
 
   ### runs
   if latest == None:
@@ -85,6 +78,9 @@ def get_data( json = True ):
   ### calc results
   result = []
   for trend, config in trends_and_configs:
+    if trend_id :
+      if trend.id != trend_id : continue
+  
     points = eval(trend.points)
     trends_data = []
 
@@ -117,6 +113,7 @@ def get_data( json = True ):
         'histo1_path' : config.histo1_path,
         'histo2_path' : config.histo2_path,
         'reference_path' : config.reference_path,
+        'trend_id' : trend.id,
         },
       'trends': trends_data } ]
 
@@ -149,8 +146,32 @@ def get_selections( json = True ):
 
 ###
 @app.route('/api/plot_selection', methods=['GET'])
-def plot_selection():
-  return jsonify({'message': 'Not supported'}), 500
+def plot_selection( json = True ):
+  #try:
+    subsystems = db.session.query( db.Config.subsystem ).distinct().all()
+    datasets = db.session.query( db.Dataset.id, db.Dataset.stream, db.Dataset.reco_path ).distinct().all()
+    configs = db.session.query( db.Config.id, db.Config.name ).all()
+
+    trends = db.session.query( db.Trend.dataset_id, db.Trend.subsystem, db.Trend.config_id ).where( db.Trend.points != "{}").all()
+    trends_dic = defaultdict(dict)
+    for trend in trends:
+      trends_dic[ str(trend.dataset_id) + "_" + str(trend.subsystem) ][ trend.config_id ] = trend.id;
+
+    obj = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for s in subsystems:
+      for d in datasets:
+        key = str(d.id) + "_" + str(s.subsystem)
+        if key not in trends_dic: continue
+
+        trend_n_cfg = trends_dic[ key ]
+        plots = [ { 'name' : cfg.name, 'id' : trend_n_cfg [ cfg.id ] } for cfg in configs if cfg.id in trend_n_cfg ]
+
+        obj[ s.subsystem ][ d.stream ][ d.reco_path ] = plots
+
+    if json : return jsonify(obj)
+    return obj
+  #except:
+  #  pass
 
 ### 
 @app.route('/api/runs', methods=['GET'])
@@ -174,7 +195,7 @@ def expand_url():
 
   url_type = request.args.get('url_type')
   run = request.args.get('run', type=int)
-  plot_id = request.args.get('plot_id', type=str)
+  trend_id = request.args.get('trend_id', type=str)
   subsystem = request.args.get('subsystem', type=str)
   pd = request.args.get('pd', type=str)
   ps = request.args.get('ps', type=str)
@@ -182,8 +203,8 @@ def expand_url():
   if run == None:
     return jsonify({'message': 'Please provide a run parameter.'}), 400
 
-  if plot_id == None:
-    return jsonify({'message': 'Please provide a plot_id parameter.'}), 400
+  if trend_id == None:
+    return jsonify({'message': 'Please provide a trend_id parameter.'}), 400
 
   if subsystem == None:
     return jsonify({'message': 'Please provide a subsystem parameter.'}), 400
@@ -199,15 +220,19 @@ def expand_url():
       'message': 'Please provide a valid url_type parameter. Accepted values are: %s' % ','.join(valid_url_types)
     }), 400
 
-  config = db.session.query( db.Config ).where( db.Config.name == plot_id, db.Config.subsystem == subsystem ).first()
+  trends_and_configs = db.session.query( db.Trend, db.Config ).where( db.Trend.id == trend_id ).filter( db.Trend.config_id == db.Config.id ).first()
   if not config:
-    return jsonify( { 'message': 'Can not find config with subsystem, plot_id = \'' + str(subsystem) + "', '" + str(plot_id) + "'" } ), 400
+    return jsonify( { 'message': 'Can not find config with subsystem, series_id = \'' + str(subsystem) + "', '" + str(series_id) + "'" } ), 400
 
   getter = valid_url_types[ url_type ]
   me_path = getattr(config, getter)
+  try: # if not me_path :
+    plot_folder = '/'.join(me_path.split('/')[:-1])
+  except:
+    return jsonify({'message': 'Requested URL type is not found.'}), 404
   
   # where reco_path = 'PromptReco' and stream = 'Cosmics' and run = '335614';
-  gui_file = db.session.query( db.GUIFile ).where( db.GUIFile.reco_path == ps, db.Config.stream == pd, db.Config.run == str(run) ).first()
+  gui_file = db.session.query( db.GUIFile ).where( db.GUIFile.reco_path == ps, db.GUIFile.stream == pd, db.GUIFile.run == str(run) ).first()
   if not gui_file:
     return jsonify( { 'message': 'Can not find GUIFile with reco_path, stream, run = \'' + str(reco_path) + "', '" + str(stream) + "', '" + str(run) + "'" } ), 400
 
@@ -218,7 +243,6 @@ def expand_url():
   else :
     return jsonify( { 'message': 'Can find dataset in eos file path \'' + gui_file.path + "'" } ), 400
   
-  plot_folder = '/'.join(me_path.split('/')[:-1])
   DQMGUI = 'https://cmsweb.cern.ch/dqm/offline/'
   gui_url = '%sstart?runnr=%s;dataset=%s;workspace=Everything;root=%s;focus=%s;zoom=yes;' % (DQMGUI, run, dataset, plot_folder, me_path)
   image_url = '%splotfairy/archive/%s%s/%s?v=1510330581101995531;w=1906;h=933' % (DQMGUI, run, dataset, me_path)

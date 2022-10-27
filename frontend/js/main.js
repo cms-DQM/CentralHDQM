@@ -98,7 +98,13 @@ const main = (function() {
 
                 group.series.forEach(seriesName => {
                     if(allSeriesNames.includes(seriesName)) {
-                        plotData.series.push(allSeries.find(x => x.metadata.name == seriesName))
+                        const item = allSeries.find(x => x.metadata.name == seriesName);
+                        plotData.series.push( item )
+                        plotData.trend_id = item.metadata.trend_id;
+                        plotData.relative_path = item.metadata.relative_path;
+                        plotData.histo1_path = item.metadata.histo1_path;
+                        plotData.histo2_path = item.metadata.histo2_path;
+                        plotData.reference_path = item.metadata.reference_path;
                         namesUsedInDisplayGroups.push(seriesName)
                     }
                 })
@@ -119,6 +125,7 @@ const main = (function() {
                         histo1_path    : series.metadata.histo1_path,
                         histo2_path    : series.metadata.histo2_path,
                         reference_path : series.metadata.reference_path,
+                        trend_id  : series.metadata.trend_id,
                         subsystem : $("#subsystem-select").val(),
                         pd        : $("#pd-select").val(),
                         ps        : $("#processing-string-select").val(),
@@ -289,13 +296,13 @@ const main = (function() {
             omsLink.attr("href", "https://cmsoms.cern.ch/cms/runs/report?cms_run=" + dataPoint.run)
             rrLink.attr("href", "https://cmsrunregistry.web.cern.ch/offline/workspaces/global?run_number=" + dataPoint.run)
             // guiLink.attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
-            guiLink.attr("href", `${config.getBaseAPIUrl()}/expand_url?plot_id=${String(plotData.name)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_gui_url`)
+            guiLink.attr("href", `${config.getBaseAPIUrl()}/expand_url?trend_id=${String(plotData.trend_id)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_gui_url`)
 
             // $("#main-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_gui_url`)
             // $("#gui-main-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?data_point_id=${String(dataPoint.id)}&url_type=main_image_url`)
 
-            $("#main-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?plot_id=${String(plotData.name)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_gui_url`)
-            $("#gui-main-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?plot_id=${String(plotData.name)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_image_url`)
+            $("#main-plot-gui-url").attr("href", `${config.getBaseAPIUrl()}/expand_url?trend_id=${String(plotData.trend_id)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_gui_url`)
+            $("#gui-main-plot-modal-image").attr("src", `${config.getBaseAPIUrl()}/expand_url?trend_id=${String(plotData.trend_id)}&subsystem=${String(plotData.subsystem)}&pd=${String(plotData.pd)}&ps=${String(plotData.ps)}&run=${String(dataPoint.run)}&url_type=main_image_url`)
 
             $(".fs-run").text(dataPoint.run)
         },
@@ -356,3 +363,20 @@ $(document).ready(async function()
         await fullScreenController.changeRangesClicked(urlController.get("fsPlot"), false)
     }
 })
+
+function parce_lumi( lumi ){
+  if(lumi == null) return lumi;
+  const fields = lumi.split('x');
+  if( fields.length != 2 ) return parseFloat( lumi );
+  let answer = parseFloat( fields[0] );
+  let postfix = fields[1].trim();
+  if( postfix == "10^{30}cm^{-2}s^{-1}" ) return answer;
+}
+
+
+
+
+
+
+
+
