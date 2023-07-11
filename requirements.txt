@@ -1,8 +1,8 @@
-Flask==1.1.1
-requests==2.22.0
-SQLAlchemy==1.4.39
+Flask<2.0.0
+requests<3.0.0
+SQLAlchemy<2.0.0
 psycopg2-binary
-cachetools==3.1.1
+cachetools<4.0.0
 python-decouple
 cernrequests
 Flask-Cors
