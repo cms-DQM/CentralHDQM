@@ -8,11 +8,13 @@ import sys
 from cachetools import cached, TTLCache
 
 from extra import *
-CLIENT_ID     = get_env_secret( None, "CLIENT_ID" )
-CLIENT_SECRET = get_env_secret( None, "CLIENT_SECRET" )
-AUDIENCE      = get_env_secret( None, "AUDIENCE" )
+
+CLIENT_ID = get_env_secret(None, "CLIENT_ID")
+CLIENT_SECRET = get_env_secret(None, "CLIENT_SECRET")
+AUDIENCE = get_env_secret(None, "AUDIENCE")
 
 headers = {"content-type": "application/x-www-form-urlencoded"}
+
 
 def exchange_tokens(token):
     data = {
@@ -39,7 +41,7 @@ def exchange_tokens(token):
         return "Error: " + str(e)
 
 
-def get_token( log ):
+def get_token(log):
     data = {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
