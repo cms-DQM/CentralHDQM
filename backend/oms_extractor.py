@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-
-import requests
-import get_token
-
+import os
 import urllib3
+import requests
+from dotenv import load_dotenv
+from .get_token import get_token
+
+load_dotenv()
+
+CLIENT_ID = os.environ.get("CLIENT_ID")
+CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+AUDIENCE = "cmsoms-prod"
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -22,14 +28,14 @@ def get_oms_run(run, log):
     try:
         global HEADERS
         if not HEADERS:
-            token = get_token.get_token(log)
+            token = get_token(CLIENT_ID, CLIENT_SECRET, AUDIENCE)
             HEADERS = {"Authorization": "Bearer %s" % (token)}
 
         try:
             response = requests.get(url, headers=HEADERS, verify=False)
             oms_runs_json = response.json()
         except:
-            token = get_token.get_token(log)
+            token = get_token(CLIENT_ID, CLIENT_SECRET, AUDIENCE)
             HEADERS = {"Authorization": "Bearer %s" % (token)}
             response = requests.get(url, headers=HEADERS, verify=False)
             oms_runs_json = response.json()

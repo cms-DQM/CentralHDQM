@@ -2,25 +2,30 @@
 # P.S.~Mandrik, IHEP, 2022, https://github.com/pmandrik
 # python3 -m pip install -r requirements.txt -t .python_packages/python3
 # export PYTHONPATH=$PYTHONPATH:.python_packages/python3/
-
-from extra import *
-import oms_extractor
-import rr_extractor
+import os
 
 from configparser import RawConfigParser
 from glob import glob
 import re
 import ROOT
-import errno
 import argparse
 import os, sys, math
 from collections import defaultdict
-
 import logging
-from logging import handlers
+
+import db
+from extra import (
+    TrendCfg,
+    DQMFile,
+    compare_configs,
+    add_point_to_trend,
+    get_plot_path,
+    nostdout,
+)
+import oms_extractor
+import rr_extractor
 
 from metrics import basic, fits, muon_metrics, L1T_metrics, hcal_metrics
-import db
 
 LOGLEVEL = logging.INFO
 LOGPATH = "./logs_extractor.txt"
@@ -235,7 +240,10 @@ def process_gui_root(file, trend_cfgs, mes, log):
 
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+
     ### setup
+    load_dotenv()
     parser = argparse.ArgumentParser(description="HDQM trend calculation.")
     log = logging.getLogger(__file__)
     log.setLevel(LOGLEVEL)
@@ -263,7 +271,7 @@ if __name__ == "__main__":
     ROOT.gROOT.SetBatch(True)
 
     ### get path to the db
-    db_path = get_env_secret(log, "HDQM2_DB_PATH")
+    db_path = os.environ.get("HDQM2_DB_PATH")
     db.create_session(db_path)
 
     ### read configs

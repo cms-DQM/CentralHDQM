@@ -3,6 +3,7 @@ from collections import defaultdict
 from flask import Flask, jsonify, request, redirect
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 
 CORS(app)
@@ -417,9 +418,13 @@ def do_tests():
 if __name__ == "__main__":
     # do_tests()
     # exit()
+    from dotenv import load_dotenv
+
     from extra import *
 
-    db_path = get_env_secret(None, "HDQM2_DB_PATH")
+    load_dotenv()
+
+    db_path = os.environ.get("HDQM2_DB_PATH")
     db.create_session(db_path)
 
     port = 5000

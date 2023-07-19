@@ -267,6 +267,9 @@ def setup_db():
 
 if __name__ == "__main__":
     ### get path to the db
-    db_path = get_env_secret(None, "HDQM2_DB_PATH")
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    db_path = os.environ.get("HDQM2_DB_PATH")
     create_session(db_path)
     setup_db()
