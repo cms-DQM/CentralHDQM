@@ -3,7 +3,7 @@ import requests
 import logging
 import cernrequests
 from cachetools import cached, TTLCache
-from .extra import *
+from backend.extra import *
 
 
 headers = {"content-type": "application/x-www-form-urlencoded"}

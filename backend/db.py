@@ -1,6 +1,7 @@
 # P.S.~Mandrik, IHEP, 2022, https://github.com/pmandrik
 
 import os
+import logging
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (
@@ -19,11 +20,26 @@ from sqlalchemy import (
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import select
 
+logger = logging.getLogger(__name__)
+
 Base = declarative_base()
 
 # SQLite will be used if no production DB credentials will be found
 session = None
 engine = None
+
+
+def get_formatted_db_uri(
+    username: str = "postgres",
+    password: str = "postgres",
+    host: str = "postgres",
+    port: int = 5432,
+    db_name="postgres",
+) -> str:
+    """
+    Helper function to format the DB URI for SQLAclhemy
+    """
+    return f"postgresql://{username}:{password}@{host}:{port}/{db_name}"
 
 
 def create_session(db_string=None):
@@ -115,12 +131,12 @@ def get_runs():
     return runs
 
 
-def add_run(run_number, log):
-    log.info('Add new run "%s" to the DB ...' % (run_number))
+def add_run(run_number):
+    logger.info('Add new run "%s" to the DB ...' % (run_number))
     run = Run(id=run_number)
     session.add(run)
     session.commit()
-    log.info("Add new run ... ok")
+    logger.info("Add new run ... ok")
     return run
 
 
@@ -129,8 +145,8 @@ def get_configs():
     return configs
 
 
-def add_configs(configs, log):
-    log.info("Add new configs to the DB ...")
+def add_configs(configs):
+    logger.info("Add new configs to the DB ...")
 
     try:
         configs_to_add = []
@@ -157,18 +173,18 @@ def add_configs(configs, log):
         # apply changes
         session.commit()
     except Exception as error_log:
-        log.warning(
+        logger.warning(
             "failed to add config to the DB %s/%s, skip"
             % (config.name, config.cfg_path)
         )
-        log.warning("Error ... %s " % error_log)
+        logger.warning("Error ... %s " % error_log)
         return 1
 
     return 0
 
 
-def update_configs(configs, log):
-    log.info("Update configs in the DB ...")
+def update_configs(configs):
+    logger.info("Update configs in the DB ...")
     try:
         for config_new, config_old in configs:
             attributes = [
@@ -188,17 +204,17 @@ def update_configs(configs, log):
         # apply changes
         session.commit()
     except Exception as error_log:
-        log.warning(
+        logger.warning(
             "failed to add config to the DB %s/%s, skip"
             % (config.name, config.cfg_path)
         )
-        log.warning("Error ... %s " % error_log)
+        logger.warning("Error ... %s " % error_log)
         return 1
 
     return 0
 
 
-def get_dataset(stream, reco_path, log):
+def get_dataset(stream, reco_path):
     dataset = (
         session.query(Dataset)
         .where(Dataset.stream == stream, Dataset.reco_path == reco_path)
@@ -212,19 +228,19 @@ def get_trends(dataset):
     return trends
 
 
-def add_dataset(stream, reco_path, log):
-    log.info('Add new dataset ("%s", "%s") to the DB ...' % (stream, reco_path))
+def add_dataset(stream, reco_path):
+    logger.info('Add new dataset ("%s", "%s") to the DB ...' % (stream, reco_path))
     dataset = Dataset()
     dataset.stream = stream
     dataset.reco_path = reco_path
     session.add(dataset)
     session.commit()
-    log.info("Add new dataset ... ok")
+    logger.info("Add new dataset ... ok")
     return dataset
 
 
-def add_trends(dataset, trend_cfgs, log):
-    log.info(
+def add_trends(dataset, trend_cfgs):
+    logger.info(
         'Add new trends of dataset ("%s", "%s") to the DB ...'
         % (dataset.stream, dataset.reco_path)
     )
@@ -238,18 +254,18 @@ def add_trends(dataset, trend_cfgs, log):
         trends_to_add += [trend]
     session.bulk_save_objects(trends_to_add)
     session.commit()
-    log.info("Add new trends ... ok")
+    logger.info("Add new trends ... ok")
 
 
-def add_gui_file(file, log):
-    log.info('Add processed gui file ("%s") to the DB ...' % (file.path))
+def add_gui_file(file):
+    logger.info('Add processed gui file ("%s") to the DB ...' % (file.path))
     f = GUIFile(path=file.path)
     attributes = ["short_name", "version", "run", "stream", "reco_path"]
     for attr in attributes:
         setattr(f, attr, getattr(file, attr))
     session.add(f)
     session.commit()
-    log.info("Add gui file ... ok")
+    logger.info("Add gui file ... ok")
 
 
 def check_gui_file(file):

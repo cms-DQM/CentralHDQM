@@ -1,5 +1,5 @@
 [Unit]
-Description=An HDQM API server
+Description=HDQM API server
 
 [Service]
 WorkingDirectory=/data/hdqm2/current/backend

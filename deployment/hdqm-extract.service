@@ -1,5 +1,5 @@
 [Unit]
-Description=An HDQM Extract
+Description=HDQM Extractor service
 
 [Service]
 WorkingDirectory=/data/hdqm2/current/backend

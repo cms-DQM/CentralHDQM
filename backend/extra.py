@@ -1,7 +1,10 @@
 # P.S.~Mandrik, IHEP, 2022, https://github.com/pmandrik
 
-import sys, os
+import sys
+import logging
 import contextlib
+
+logger = logging.getLogger(__name__)
 
 
 ### DQM classes
@@ -100,21 +103,21 @@ def get_plot_path(path, run):
 
 
 ### update trends informations with data points
-import bisect
+# import bisect
 
 
-def add_point_to_trend(trend, dataset, trend_cfg, run, value, error, log):
+def add_point_to_trend(trend, dataset, trend_cfg, run, value, error):
     trend.points.replace("inf", "0")
     try:
         points = eval(trend.points)
-        # log.info('Run %s duplicate point in trend "%s" dataset "%s" "%s" config "%s" "%s"' % (str(run), trend.subsystem, dataset.stream, dataset.reco_path, trend_cfg.name, trend_cfg.plot_title) )
+        # logger.info('Run %s duplicate point in trend "%s" dataset "%s" "%s" config "%s" "%s"' % (str(run), trend.subsystem, dataset.stream, dataset.reco_path, trend_cfg.name, trend_cfg.plot_title) )
         points[run] = [value, error]
     except Exception as error_log:
-        log.info(
+        logger.info(
             "Failed to add point to trend %s/%s" % (trend_cfg.name, trend_cfg.cfg_path)
         )
-        log.info("Trend points %s" % (str(trend.points)))
-        log.info("Error ... %s " % error_log)
+        logger.info("Trend points %s" % (str(trend.points)))
+        logger.info("Error ... %s " % error_log)
         return False
     trend.points = str(points)
     return True

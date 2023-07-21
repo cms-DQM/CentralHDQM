@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath("./backend")))
 
 from backend.rr_extractor import get_rr_run, is_significant
-from test_data import RUN_REGISTRY_RUN_355555_DATA, RUN_REGISTRY_RUN_355556_DATA
+from tests.test_data import RUN_REGISTRY_RUN_355555_DATA, RUN_REGISTRY_RUN_355556_DATA
 
 
 def test_get_rr_run():
