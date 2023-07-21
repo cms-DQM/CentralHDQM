@@ -118,18 +118,3 @@ def add_point_to_trend(trend, dataset, trend_cfg, run, value, error, log):
         return False
     trend.points = str(points)
     return True
-
-
-### ges enviroment
-def get_env_secret(log, secret_name):
-    env_secret = None
-    try:
-        env_secret = os.environ[secret_name]
-    except Exception as error_log:
-        if log:
-            log.warning("get_env_secret(): can't load DQM_PASSWORD cookie")
-            log.warning(repr(error_log))
-        else:
-            print("get_env_secret(): can't load DQM_PASSWORD cookie")
-            print(repr(error_log))
-    return env_secret

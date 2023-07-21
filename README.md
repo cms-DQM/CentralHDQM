@@ -54,25 +54,20 @@ cd /tmp/$USER/hdqm/
 git clone https://github.com/cms-dqm/CentralHDQM
 cd CentralHDQM/
 
-# Get an SSO to access OMS and RR APIs. This has to be done before cmsenv script
-# First check if we are the owner of the folder where we'll be puting the cookie
-# Cookie for  Run Registry:
-cern-get-sso-cookie --cert ~/private/usercert.pem --key ~/private/userkey.pem -u https://cmsrunregistry.web.cern.ch/api/runs_filtered_ordered -o backend/api/etc/rr_sso_cookie.txt
+
 
 cd backend/
 # Need to add client secret backend/.env file - ask DQM conveners to provide it.
-nano .env
+cp .env_sample .env && nano .env
 
 # This will give us cern-get-sso-cookie -u https://cmsoms.cern.ch/agg/api/v1/runs -o backend/api/etc/oms_sso_cookie.txta CMSSW environment
 source cmsenv
 
 # Add python dependencies
-python3 -m pip install -r requirements.txt -t .python_packages/python3
-python -m pip install -r requirements.txt -t .python_packages/python2
+python -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements.txt 
 
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/.python_packages/python2"
-
-cd extractor/
 
 # Extract few DQM histograms. Using only one process because we are on SQLite
 ./hdqmextract.py -c cfg/PixelPhase1/trendPlotsPixelPhase1_tracks.ini -r 324997 324998 324999 325000 325001 325022 325057 325097 325098 325099 -j 1
@@ -89,10 +84,9 @@ cd ../api/
 ./run.sh &>/dev/null &
 
 cd ../../frontend/
-# Use local API instead of the production one
-sed -i 's/\/api/http:\/\/localhost:8080\/api/g' js/config.js
+
 # Run the static file server
-python3 -m http.server 8000 &>/dev/null &
+python3 server.py &>/dev/null &
 
 # Run this to find pids of running servers to kill them:
 # ps awwx | grep python
