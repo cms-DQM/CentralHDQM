@@ -39,14 +39,10 @@ elif [ "$1" = "extract" ]; then
   # Source ROOT activation script from CVMFS
   . /cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.24.08/x86_64-centos7-gcc48-opt/bin/thisroot.sh
 
-  # Keep authenticating with kerberos to access EOS
-  while true ; do
-    kinit -kt /data/hdqm/.keytab cmsdqm
-    /usr/bin/eosfusebind -g
+  # Authenticate with kerberos to access EOS
+  kinit -kt /data/hdqm/.keytab cmsdqm
+  /usr/bin/eosfusebind -g
 
-    python3 backend/dqm_extractor.py
-    sleep 3d
-    #exit
-  done
+  python3 backend/dqm_extractor.py
 fi
 

@@ -153,7 +153,7 @@ This tool is responsible for reducing every DQM monitor element found in the dat
 When new runs appear in the database, OMS and RR APIs need to be queried to find out if new runs need to be filtered out or not. For this, the following tools need to be executed, in this specific order:
 
 ``` bash
-bash /data/hdqm2/current/backend/run.sh extract
+bash /data/hdqm/current/backend/run.sh extract
 ```
 
 ### Summary
@@ -438,14 +438,14 @@ EOS and CVMFS file systems need to be accessible in order for the service to wor
 
 Nginx configurations (production and test) for the reverse proxy can be found here: `/etc/nginx/conf.d/`
 
-Systemctl service for the API server can be found here: `/etc/systemd/system/hdqm2.service`
-Systemctl service for the test API server can be found here: `/etc/systemd/system/hdqm2-test.service`
+Systemctl service for the API server can be found here: `/etc/systemd/system/hdqm.service`
+Systemctl service for the test API server can be found here: `/etc/systemd/system/hdqm-test.service`
 
 Starting reverse proxy (nginx):
 `sudo systemctl start nginx.service`
 
 Starting the API service:  
-`sudo systemctl start hdqm2.service`
+`sudo systemctl start hdqm.service`
 
 Starting the extractor service:  
 `sudo systemctl start hdqm-extract.service`
@@ -464,7 +464,7 @@ Also important:
 `sudo firewall-cmd --zone=public --add-port=81/tcp --permanent`  
 `sudo firewall-cmd --reload`  
 Make sure to make root directory accessible in SELinux:  
-`chcon -Rt httpd_sys_content_t /data/hdqmTest/CentralHDQM/frontend/`  
+`chcon -Rt httpd_sys_content_t /data/hdqm-test/CentralHDQM/frontend/`  
 `sudo chcon -Rt httpd_sys_content_t /data/hdqm/`
 
 DB authentication information is placed in this file: `backend/connection_string.txt`, in the first line of said file, in this format: `postgres://<DB_NAME>:<PASSWORD>@<HOST>:<PORT>/<USER>`
@@ -526,7 +526,7 @@ User credentials are stored in a keytab file. This file needs to be updated when
 sudo su cmsdqm
 ktutil
 # Keep in mind the capital letters - they are important!
-add_entry -password -p cmsdqm@CERN.CH -k 1 -e aes256-cts-hmac-sha1-96
+# add_entry -password -p cmsdqm@CERN.CH -k 1 -e aes256-cts-hmac-sha1-96 # This does not work anymore?
 add_entry -password -p cmsdqm@CERN.CH -k 1 -e arcfour-hmac
 write_kt /data/hdqm/.keytab
 exit

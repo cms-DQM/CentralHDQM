@@ -2,8 +2,8 @@
 Description=HDQM API server
 
 [Service]
-WorkingDirectory=/data/hdqm2/current/backend
-ExecStart=/data/hdqm2/current/backend/run.sh api
+WorkingDirectory=/data/hdqm/current
+ExecStart=/data/hdqm/current/run.sh api
 User=cmsdqm
 
 [Install]

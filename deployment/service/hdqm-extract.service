@@ -2,8 +2,8 @@
 Description=HDQM Extractor service
 
 [Service]
-WorkingDirectory=/data/hdqm2/current/backend
-ExecStart=/data/hdqm2/current/backend/run.sh extract
+WorkingDirectory=/data/hdqm/current
+ExecStart=/data/hdqm/current/run.sh extract
 User=cmsdqm
 Restart=always
 RestartSec=30
