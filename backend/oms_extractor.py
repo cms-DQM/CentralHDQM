@@ -2,10 +2,13 @@
 import os
 import urllib3
 import requests
+import logging
 from dotenv import load_dotenv
-from .get_token import get_token
+from backend.get_token import get_token
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
@@ -20,8 +23,8 @@ OMS_URL = (
 HEADERS = None
 
 
-def get_oms_run(run, log):
-    log.info("Get OMS data for run %s ..." % run)
+def get_oms_run(run):
+    logger.info("Get OMS data for run %s ..." % run)
     url = OMS_URL % run
 
     oms_data = ""
@@ -46,10 +49,10 @@ def get_oms_run(run, log):
         try:
             oms_attributes_meta = oms_runs_json["data"][0]["meta"]["row"]
         except Exception as error_log:
-            log.warning(
+            logger.warning(
                 "Failed to get OMS meta for run %s ..., skip without units" % run
             )
-            log.warning("Error ... %s " % error_log)
+            logger.warning("Error ... %s " % error_log)
             units = "0"
 
         if oms_attributes_meta:
@@ -68,8 +71,8 @@ def get_oms_run(run, log):
         oms_data = oms_attributes
 
     except Exception as error_log:
-        log.warning("Failed to get OMS data for run %s ..." % run)
-        log.warning("Error ... %s " % error_log)
+        logger.warning("Failed to get OMS data for run %s ..." % run)
+        logger.warning("Error ... %s " % error_log)
         return 1
 
     return oms_data

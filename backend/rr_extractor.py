@@ -4,7 +4,7 @@ import json
 import logging
 import requests
 from dotenv import load_dotenv
-from .get_token import get_token
+from backend.get_token import get_token
 
 
 load_dotenv()

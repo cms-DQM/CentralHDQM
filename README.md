@@ -1,3 +1,6 @@
+> **Note**
+> The latest up-to-date instructions can be found in [the wiki](./wiki/).
+
 # Table of contents
 
 - [Table of contents](#table-of-contents)
@@ -38,7 +41,7 @@ The code is running on a `vocms0231` machine.
 
 # Usage instructions
 
-## How to run locally
+## How to run on LXPLUS
 
 The following instruction are completely copy-pastable. This will start a complete HDQM stack on your local (lxplus) environment. This is perfect for testing new plots before adding them. Instructions are are made for bash shell.
 
@@ -120,10 +123,9 @@ python3 -m http.server 8000 &>/dev/null &
 
 Main HDQM commands are the following:
 
-1. `hdqmextract.py`
-2. `calculate.py`
+1. `dqm_extractor.py`
 
-### `hdqmextract.py`
+### `dqm_extractor.py`
 
 This tool is responsible for extracting DQM monitor elements from ROOT files and storing them as binary data in the database. This is separated from HDQM value calculation to ensure that values can be recalculated quickly, without relying on a file system every time.
 
@@ -136,7 +138,7 @@ This tool is responsible for extracting DQM monitor elements from ROOT files and
 
 Default EOS directory for `-f` argument is this: `/eos/cms/store/group/comm_dqm/DQMGUI_data/*/*/*/DQM*.root`
 
-### `calculate.py`
+<!-- ### `calculate.py`
 
 This tool is responsible for reducing every DQM monitor element found in the database to a value that will be plotted, based on user defined metrics.
 
@@ -144,20 +146,15 @@ This tool is responsible for reducing every DQM monitor element found in the dat
 |----------|-----------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | -r       | runs      | None          | A list of runs. HDQM values will be calculated only for MEs containing info of these runs. By default, HDQM will be calculated for all MEs that were extracted.                                                                                                          |
 | -c       | config    | cfg/\*/\*.ini   | A list of `.ini` configuration files to be used. A pattern of a config file location is this: `cfg/<SUBSYSTEM_NAME>/<ARBITRARY_NAME>.ini`. This pattern must be followed without any additional folders in between. If a subsystem folder is missing, it can be created. |
-| -j       | nprocs    | 50            | Integer value indicating how many processes to use. **When running locally (on SQLite) this has to be 1** because SQLite doesn't support multiple connections writing to the DB.                                                                                         |
+| -j       | nprocs    | 50            | Integer value indicating how many processes to use. **When running locally (on SQLite) this has to be 1** because SQLite doesn't support multiple connections writing to the DB.                                                                                         | -->
 
 ### Other tools
 
 When new runs appear in the database, OMS and RR APIs need to be queried to find out if new runs need to be filtered out or not. For this, the following tools need to be executed, in this specific order:
 
 ``` bash
-./oms_extractor.py
-./rr_extractor.py
+bash /data/hdqm2/current/backend/run.sh extract
 ```
-
-If a big chuck of new data was recently extracted, there is a tool to prewarm the database for initial queries be fast:
-
-`./db_prewarm.py`
 
 ### Summary
 
@@ -437,22 +434,26 @@ Production API server is running on internal port 5000 and test API service on 5
 
 Code is located in `/data/hdqm/` directory.
 
-EOS and CVMFS file systems need to be accessible in order for the service to work. ROOT input files are coming EOS, and CMSSW release is comming from CVMFS.
+EOS and CVMFS file systems need to be accessible in order for the service to work. ROOT input files are coming from EOS, and CMSSW release is comming from CVMFS.
 
-Nginx configuration for a reverse proxy can be found here: `/etc/nginx/conf.d/`
+Nginx configurations (production and test) for the reverse proxy can be found here: `/etc/nginx/conf.d/`
 
-Systemctl service for an API server can be found here: `/etc/systemd/system/hdqm.service`
+Systemctl service for the API server can be found here: `/etc/systemd/system/hdqm2.service`
+Systemctl service for the test API server can be found here: `/etc/systemd/system/hdqm2-test.service`
 
 Starting reverse proxy (nginx):
 `sudo systemctl start nginx.service`
 
-Starting an API service:  
-`sudo systemctl start hdqm.service`
+Starting the API service:  
+`sudo systemctl start hdqm2.service`
 
-Packages are installed locally in `backend/.python_packages/python2` and `backend/.python_packages/python3` directories, for different python versions. Extractor and calculator are using python 2 as they rely on ROOT but an API Flask service is running on python 3. Make sure an appropriate python path is set before using the tools by hand. For example (running from `backend` directory):
+Starting the extractor service:  
+`sudo systemctl start hdqm-extract.service`
+
+Packages are installed locally in `<project root>/venv`. Make sure an appropriate python path is set before using the tools by hand:
 
 ```bash 
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/.python_packages/python2"
+source venv/bin/activate
 ```
 
 If nginx complains that it can't bind to port, make sure to request the ports to be opened in puppet:  

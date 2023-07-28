@@ -5,5 +5,9 @@
 *.pyc
 */__pycache__/*
 */private/*
+venv/
 connection_string.txt
-*.env
+.env
+.env_prod
+.env_local
+*.log

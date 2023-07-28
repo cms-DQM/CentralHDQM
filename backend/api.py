@@ -1,17 +1,29 @@
+import os
 import sys
+import re
+import logging
 from collections import defaultdict
 from flask import Flask, jsonify, request, redirect
 from flask_cors import CORS
 
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+PDPATTERN = re.compile("DQM_V\d+_R\d+__(.+__.+__.+)[.]root")  # PD inside the file name
 CORS(app)
 
-import db
+from . import db
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db.get_formatted_db_uri(
+    username=os.environ.get("DB_USERNAME", "postgres"),
+    password=os.environ.get("DB_PASSWORD", "postgres"),
+    host=os.environ.get("DB_HOST", "127.0.0.1"),
+    port=os.environ.get("DB_PORT", 5432),
+    db_name=os.environ.get("DB_NAME", "hdqm"),
+)
 
 
-###
 @app.route("/api/data", methods=["GET"])
 def get_data(json=True):
     if not json:
@@ -95,7 +107,7 @@ def get_data(json=True):
     else:
         runs = db.session.query(db.Run).order_by(db.Run.id.desc()).limit(latest).all()
 
-    print([run.id for run in runs])
+    logger.debug(f"{[run.id for run in runs]}")
     ### datasets
     dataset = (
         db.session.query(db.Dataset)
@@ -163,10 +175,8 @@ def get_data(json=True):
     return result
 
 
-###
 @app.route("/api/selection", methods=["GET"])
 def get_selections(json=True):
-    # try:
     subsystems = db.session.query(db.Config.subsystem).distinct().all()
     datasets = (
         db.session.query(db.Dataset.id, db.Dataset.stream, db.Dataset.reco_path)
@@ -196,11 +206,6 @@ def get_selections(json=True):
     return obj
 
 
-# except:
-#  pass
-
-
-###
 @app.route("/api/plot_selection", methods=["GET"])
 def plot_selection(json=True):
     # try:
@@ -244,13 +249,9 @@ def plot_selection(json=True):
     return obj
 
 
-# except:
-#  pass
-
-
-###
 @app.route("/api/runs", methods=["GET"])
 def get_runs(json=True):
+    db.create_session(db_path)
     runs = [r.id for r in db.session.query(db.Run.id).order_by(db.Run.id.asc())]
     if json:
         return jsonify(runs)
@@ -258,9 +259,6 @@ def get_runs(json=True):
 
 
 ###
-import re
-
-PDPATTERN = re.compile("DQM_V\d+_R\d+__(.+__.+__.+)[.]root")  # PD inside the file name
 
 
 @app.route("/api/expand_url", methods=["GET"])
@@ -415,19 +413,22 @@ def do_tests():
     pass
 
 
-if __name__ == "__main__":
+def create_app():
+    """
+    Entrypoint
+    """
     # do_tests()
     # exit()
     from dotenv import load_dotenv
 
-    from extra import *
-
     load_dotenv()
 
-    db_path = os.environ.get("HDQM2_DB_PATH")
+    db_path = db.get_formatted_db_uri(
+        username=os.environ.get("DB_USERNAME", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres"),
+        host=os.environ.get("DB_HOST", "127.0.0.1"),
+        port=os.environ.get("DB_PORT", 5432),
+        db_name=os.environ.get("DB_NAME", "hdqm"),
+    )
     db.create_session(db_path)
-
-    port = 5000
-    if len(sys.argv) >= 2:
-        port = int(sys.argv[1])
-    app.run(host="127.0.0.1", port=port)
+    return app
