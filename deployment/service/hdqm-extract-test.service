@@ -1,0 +1,11 @@
+[Unit]
+Description=HDQM Extractor service (test)
+
+[Service]
+WorkingDirectory=/data/hdqm-test/CentralHDQM
+ExecStart=/data/hdqm-test/CentralHDQM/run.sh extract
+User=cmsdqm
+
+[Install]
+WantedBy=multi-user.target
+

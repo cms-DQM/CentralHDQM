@@ -1,24 +1,21 @@
 #!/usr/bin/python3
-
 import requests
-import json
-import os
-import sys
-
+import logging
+import cernrequests
 from cachetools import cached, TTLCache
+from backend.extra import *
 
-from extra import *
-CLIENT_ID     = get_env_secret( None, "CLIENT_ID" )
-CLIENT_SECRET = get_env_secret( None, "CLIENT_SECRET" )
-AUDIENCE      = get_env_secret( None, "AUDIENCE" )
 
 headers = {"content-type": "application/x-www-form-urlencoded"}
 
-def exchange_tokens(token):
+logger = logging.getLogger(__name__)
+
+
+def exchange_tokens(client_id: str, client_secret: str, audience: str, token: str):
     data = {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "audience": AUDIENCE,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "audience": audience,
         "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
         "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
         "subject_token": token,
@@ -39,34 +36,31 @@ def exchange_tokens(token):
         return "Error: " + str(e)
 
 
-def get_token( log ):
+def get_token(client_id: str, client_secret: str, audience: str) -> str:
     data = {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "audience": AUDIENCE,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "audience": audience,
         "grant_type": "client_credentials",
     }
 
-    data = requests.post(
-        url="https://auth.cern.ch/auth/realms/cern/protocol/openid-connect/token",
-        data=data,
-        headers=headers,
-    )
     try:
-        data_ = json.loads(data.text)
-        access_token = data_["access_token"]
-        data_access_token_and_expires_in = exchange_tokens(access_token)
+        token, token_expiration = cernrequests.get_api_token(
+            client_id=client_id,
+            client_secret=client_secret,
+            target_application=audience,
+        )
 
-        def get_expires_in_value():
-            return data_access_token_and_expires_in["expires_in"]
+        def get_expires_in_value() -> float:
+            return token_expiration.timestamp()
 
         @cached(cache=TTLCache(maxsize=1, ttl=get_expires_in_value()))
-        def get_access_token_value():
-            return data_access_token_and_expires_in["access_token"]
+        def get_access_token_value() -> str:
+            return token
 
         data_access_token = get_access_token_value()
         return data_access_token
 
     except Exception as e:
-        log.warning(str(e))
+        logger.warning(str(e))
         return "Error: " + str(e)

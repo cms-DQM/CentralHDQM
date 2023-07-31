@@ -1,8 +1,10 @@
-Flask<2.0.0
+Flask<3.0.0
+MarkupSafe==2.0.1  # Newer versions have issues with Jinja2
 requests<3.0.0
 SQLAlchemy<2.0.0
 psycopg2-binary
 cachetools<4.0.0
-python-decouple
-cernrequests
+python-dotenv
+cernrequests>=0.5.0
 Flask-Cors
+gunicorn

@@ -1,3 +1,6 @@
+> **Note**
+> The latest up-to-date instructions can be found in [the wiki](./wiki/).
+
 # Table of contents
 
 - [Table of contents](#table-of-contents)
@@ -38,7 +41,7 @@ The code is running on a `vocms0231` machine.
 
 # Usage instructions
 
-## How to run locally
+## How to run on LXPLUS
 
 The following instruction are completely copy-pastable. This will start a complete HDQM stack on your local (lxplus) environment. This is perfect for testing new plots before adding them. Instructions are are made for bash shell.
 
@@ -54,25 +57,20 @@ cd /tmp/$USER/hdqm/
 git clone https://github.com/cms-dqm/CentralHDQM
 cd CentralHDQM/
 
-# Get an SSO to access OMS and RR APIs. This has to be done before cmsenv script
-# First check if we are the owner of the folder where we'll be puting the cookie
-# Cookie for  Run Registry:
-cern-get-sso-cookie --cert ~/private/usercert.pem --key ~/private/userkey.pem -u https://cmsrunregistry.web.cern.ch/api/runs_filtered_ordered -o backend/api/etc/rr_sso_cookie.txt
+
 
 cd backend/
 # Need to add client secret backend/.env file - ask DQM conveners to provide it.
-nano .env
+cp .env_sample .env && nano .env
 
 # This will give us cern-get-sso-cookie -u https://cmsoms.cern.ch/agg/api/v1/runs -o backend/api/etc/oms_sso_cookie.txta CMSSW environment
 source cmsenv
 
 # Add python dependencies
-python3 -m pip install -r requirements.txt -t .python_packages/python3
-python -m pip install -r requirements.txt -t .python_packages/python2
+python -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements.txt 
 
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/.python_packages/python2"
-
-cd extractor/
 
 # Extract few DQM histograms. Using only one process because we are on SQLite
 ./hdqmextract.py -c cfg/PixelPhase1/trendPlotsPixelPhase1_tracks.ini -r 324997 324998 324999 325000 325001 325022 325057 325097 325098 325099 -j 1
@@ -89,10 +87,9 @@ cd ../api/
 ./run.sh &>/dev/null &
 
 cd ../../frontend/
-# Use local API instead of the production one
-sed -i 's/\/api/http:\/\/localhost:8080\/api/g' js/config.js
+
 # Run the static file server
-python3 -m http.server 8000 &>/dev/null &
+python3 server.py &>/dev/null &
 
 # Run this to find pids of running servers to kill them:
 # ps awwx | grep python
@@ -126,10 +123,9 @@ python3 -m http.server 8000 &>/dev/null &
 
 Main HDQM commands are the following:
 
-1. `hdqmextract.py`
-2. `calculate.py`
+1. `dqm_extractor.py`
 
-### `hdqmextract.py`
+### `dqm_extractor.py`
 
 This tool is responsible for extracting DQM monitor elements from ROOT files and storing them as binary data in the database. This is separated from HDQM value calculation to ensure that values can be recalculated quickly, without relying on a file system every time.
 
@@ -142,7 +138,7 @@ This tool is responsible for extracting DQM monitor elements from ROOT files and
 
 Default EOS directory for `-f` argument is this: `/eos/cms/store/group/comm_dqm/DQMGUI_data/*/*/*/DQM*.root`
 
-### `calculate.py`
+<!-- ### `calculate.py`
 
 This tool is responsible for reducing every DQM monitor element found in the database to a value that will be plotted, based on user defined metrics.
 
@@ -150,20 +146,15 @@ This tool is responsible for reducing every DQM monitor element found in the dat
 |----------|-----------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | -r       | runs      | None          | A list of runs. HDQM values will be calculated only for MEs containing info of these runs. By default, HDQM will be calculated for all MEs that were extracted.                                                                                                          |
 | -c       | config    | cfg/\*/\*.ini   | A list of `.ini` configuration files to be used. A pattern of a config file location is this: `cfg/<SUBSYSTEM_NAME>/<ARBITRARY_NAME>.ini`. This pattern must be followed without any additional folders in between. If a subsystem folder is missing, it can be created. |
-| -j       | nprocs    | 50            | Integer value indicating how many processes to use. **When running locally (on SQLite) this has to be 1** because SQLite doesn't support multiple connections writing to the DB.                                                                                         |
+| -j       | nprocs    | 50            | Integer value indicating how many processes to use. **When running locally (on SQLite) this has to be 1** because SQLite doesn't support multiple connections writing to the DB.                                                                                         | -->
 
 ### Other tools
 
 When new runs appear in the database, OMS and RR APIs need to be queried to find out if new runs need to be filtered out or not. For this, the following tools need to be executed, in this specific order:
 
 ``` bash
-./oms_extractor.py
-./rr_extractor.py
+bash /data/hdqm/current/backend/run.sh extract
 ```
-
-If a big chuck of new data was recently extracted, there is a tool to prewarm the database for initial queries be fast:
-
-`./db_prewarm.py`
 
 ### Summary
 
@@ -443,22 +434,26 @@ Production API server is running on internal port 5000 and test API service on 5
 
 Code is located in `/data/hdqm/` directory.
 
-EOS and CVMFS file systems need to be accessible in order for the service to work. ROOT input files are coming EOS, and CMSSW release is comming from CVMFS.
+EOS and CVMFS file systems need to be accessible in order for the service to work. ROOT input files are coming from EOS, and CMSSW release is comming from CVMFS.
 
-Nginx configuration for a reverse proxy can be found here: `/etc/nginx/conf.d/`
+Nginx configurations (production and test) for the reverse proxy can be found here: `/etc/nginx/conf.d/`
 
-Systemctl service for an API server can be found here: `/etc/systemd/system/hdqm.service`
+Systemctl service for the API server can be found here: `/etc/systemd/system/hdqm.service`
+Systemctl service for the test API server can be found here: `/etc/systemd/system/hdqm-test.service`
 
 Starting reverse proxy (nginx):
 `sudo systemctl start nginx.service`
 
-Starting an API service:  
+Starting the API service:  
 `sudo systemctl start hdqm.service`
 
-Packages are installed locally in `backend/.python_packages/python2` and `backend/.python_packages/python3` directories, for different python versions. Extractor and calculator are using python 2 as they rely on ROOT but an API Flask service is running on python 3. Make sure an appropriate python path is set before using the tools by hand. For example (running from `backend` directory):
+Starting the extractor service:  
+`sudo systemctl start hdqm-extract.service`
+
+Packages are installed locally in `<project root>/venv`. Make sure an appropriate python path is set before using the tools by hand:
 
 ```bash 
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/.python_packages/python2"
+source venv/bin/activate
 ```
 
 If nginx complains that it can't bind to port, make sure to request the ports to be opened in puppet:  
@@ -469,7 +464,7 @@ Also important:
 `sudo firewall-cmd --zone=public --add-port=81/tcp --permanent`  
 `sudo firewall-cmd --reload`  
 Make sure to make root directory accessible in SELinux:  
-`chcon -Rt httpd_sys_content_t /data/hdqmTest/CentralHDQM/frontend/`  
+`chcon -Rt httpd_sys_content_t /data/hdqm-test/CentralHDQM/frontend/`  
 `sudo chcon -Rt httpd_sys_content_t /data/hdqm/`
 
 DB authentication information is placed in this file: `backend/connection_string.txt`, in the first line of said file, in this format: `postgres://<DB_NAME>:<PASSWORD>@<HOST>:<PORT>/<USER>`
@@ -531,7 +526,7 @@ User credentials are stored in a keytab file. This file needs to be updated when
 sudo su cmsdqm
 ktutil
 # Keep in mind the capital letters - they are important!
-add_entry -password -p cmsdqm@CERN.CH -k 1 -e aes256-cts-hmac-sha1-96
+# add_entry -password -p cmsdqm@CERN.CH -k 1 -e aes256-cts-hmac-sha1-96 # This does not work anymore?
 add_entry -password -p cmsdqm@CERN.CH -k 1 -e arcfour-hmac
 write_kt /data/hdqm/.keytab
 exit
