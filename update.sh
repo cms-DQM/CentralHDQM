@@ -16,7 +16,7 @@ cd $src
 git checkout master
 
 # Copy the .env file: It's expected to be found in /data/hdqm.
-if [! -f ../.env]; then
+if [ ! -f ../.env ]; then
     echo "A file named .env is expected to be in the same directory with update.sh; Create it and rerun the script"
     exit 1
 fi
@@ -24,10 +24,13 @@ cp ../.env ./backend/
 
 
 # Create a venv, activate it, install requirements.
-PYTHON=`(which python3)`
-$PYTHON -m venv venv
+SYS_PYTHON=`(which python3)`
+$SYS_PYTHON -m venv venv
 source venv/bin/activate
-$PYTHON -m pip install -r requirements.txt -U --no-cache-dir
+
+# No need for SYS_PYTHON, use the venv one
+python -m pip install -U pip --no-cache-dir
+python -m pip install -r requirements.txt -U --no-cache-dir
 
 # Add ROOT to PATH (includes PyROOT)
 . /cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.24.08/x86_64-centos7-gcc48-opt/bin/thisroot.sh

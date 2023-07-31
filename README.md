@@ -1,38 +1,6 @@
 > **Note**
 > The latest up-to-date instructions can be found in [the wiki](./wiki/).
 
-# Table of contents
-
-- [Table of contents](#table-of-contents)
-- [Central Historic DQM application for CMS detector](#central-historic-dqm-application-for-cms-detector)
-- [Usage instructions](#usage-instructions)
-  * [How to run locally](#how-to-run-locally)
-    + [New ssh connection](#new-ssh-connection)
-  * [Main HDQM commands explained](#main-hdqm-commands-explained)
-    + [`hdqmextract.py`](#-hdqmextractpy-)
-    + [`calculate.py`](#-calculatepy-)
-    + [Other tools](#other-tools)
-    + [Summary](#summary)
-  * [How to add new plots](#how-to-add-new-plots)
-    + [Backend configuration](#backend-configuration)
-    + [Frontend configuration](#frontend-configuration)
-    + [Adding new metrics](#adding-new-metrics)
-  * [Web application usage](#web-application-usage)
-- [API documentation](#api-documentation)
-  * [Endpoints](#endpoints)
-    + [`/api/data`](#--api-data-)
-    + [`/api/selection`](#--api-selection-)
-    + [`/api/plot_selection`](#--api-plot-selection-)
-    + [`/api/runs`](#--api-runs-)
-    + [`/api/expand_url`](#--api-expand-url-)
-- [Administration instructions](#administration-instructions)
-  * [API local setup instructions](#api-local-setup-instructions)
-    + [Instructions on how to retrieve the certificate and the key:](#instructions-on-how-to-retrieve-the-certificate-and-the-key-)
-  * [Daily extraction](#daily-extraction)
-    + [EOS access](#eos-access)
-  * [How to update](#how-to-update)
-    + [How to rollback to the old version](#how-to-rollback-to-the-old-version)
-
 # Central Historic DQM application for CMS detector
 
 A tool to display trends of CMS DQM quantities over long periods of time.  
@@ -43,6 +11,9 @@ The code is running on a `vocms0231` machine.
 
 ## How to run on LXPLUS
 
+> **Warning**
+> Probably deprecated. 
+ 
 The following instruction are completely copy-pastable. This will start a complete HDQM stack on your local (lxplus) environment. This is perfect for testing new plots before adding them. Instructions are are made for bash shell.
 
 ``` bash
@@ -56,8 +27,6 @@ cd /tmp/$USER/hdqm/
 
 git clone https://github.com/cms-dqm/CentralHDQM
 cd CentralHDQM/
-
-
 
 cd backend/
 # Need to add client secret backend/.env file - ask DQM conveners to provide it.
@@ -97,28 +66,6 @@ python3 server.py &>/dev/null &
 
 That's it! Now visit http://localhost:8000/ on your browser.
 
-### New ssh connection
-
-If you have already successfully executed the instructions above and you want to keep working on the same deployment with new `ssh` connection, please follow the instructions bellow:
-
-``` bash
-/bin/bash
-cd /tmp/$USER/hdqm/CentralHDQM/
-
-cern-get-sso-cookie --cert ~/private/usercert.pem --key ~/private/userkey.pem -u https://cmsrunregistry.web.cern.ch/api/runs_filtered_ordered -o backend/api/etc/rr_sso_cookie.txt
-
-cd backend/
-source cmsenv
-
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/.python_packages/python2"
-
-cd api/
-./run.sh &>/dev/null &
-
-cd ../../frontend/
-python3 -m http.server 8000 &>/dev/null &
-```
-
 ## Main HDQM commands explained
 
 Main HDQM commands are the following:
@@ -148,13 +95,6 @@ This tool is responsible for reducing every DQM monitor element found in the dat
 | -c       | config    | cfg/\*/\*.ini   | A list of `.ini` configuration files to be used. A pattern of a config file location is this: `cfg/<SUBSYSTEM_NAME>/<ARBITRARY_NAME>.ini`. This pattern must be followed without any additional folders in between. If a subsystem folder is missing, it can be created. |
 | -j       | nprocs    | 50            | Integer value indicating how many processes to use. **When running locally (on SQLite) this has to be 1** because SQLite doesn't support multiple connections writing to the DB.                                                                                         | -->
 
-### Other tools
-
-When new runs appear in the database, OMS and RR APIs need to be queried to find out if new runs need to be filtered out or not. For this, the following tools need to be executed, in this specific order:
-
-``` bash
-bash /data/hdqm/current/backend/run.sh extract
-```
 
 ### Summary
 
@@ -424,144 +364,3 @@ Possible arguments:
 | data_point_id | int       | required          | An ID referring to a single data point returned by the `/api/data` endpoint.                                                                                                                                                     |
 | url_type      | string    | required          | Type of the DQM GUI URL required. All possible values are: `main_gui_url`, `main_image_url`, `optional1_gui_url`, `optional1_image_url`, `optional2_gui_url`, `optional2_image_url`, `reference_gui_url`, `reference_image_url`. |
 
-# Administration instructions
-
-Production service is running on a public port 80 and test service on 81.
-Production API server is running on internal port 5000 and test API service on 5001.
-
-**Before doing anything become the correct user:**  
-`sudo su cmsdqm`
-
-Code is located in `/data/hdqm/` directory.
-
-EOS and CVMFS file systems need to be accessible in order for the service to work. ROOT input files are coming from EOS, and CMSSW release is comming from CVMFS.
-
-Nginx configurations (production and test) for the reverse proxy can be found here: `/etc/nginx/conf.d/`
-
-Systemctl service for the API server can be found here: `/etc/systemd/system/hdqm.service`
-Systemctl service for the test API server can be found here: `/etc/systemd/system/hdqm-test.service`
-
-Starting reverse proxy (nginx):
-`sudo systemctl start nginx.service`
-
-Starting the API service:  
-`sudo systemctl start hdqm.service`
-
-Starting the extractor service:  
-`sudo systemctl start hdqm-extract.service`
-
-Packages are installed locally in `<project root>/venv`. Make sure an appropriate python path is set before using the tools by hand:
-
-```bash 
-source venv/bin/activate
-```
-
-If nginx complains that it can't bind to port, make sure to request the ports to be opened in puppet:  
-https://gitlab.cern.ch/ai/it-puppet-hostgroup-vocms/merge_requests/72  
-
-And open them using SELinux: `sudo semanage port -m -t http_port_t -p tcp 8081`  
-Also important:  
-`sudo firewall-cmd --zone=public --add-port=81/tcp --permanent`  
-`sudo firewall-cmd --reload`  
-Make sure to make root directory accessible in SELinux:  
-`chcon -Rt httpd_sys_content_t /data/hdqm-test/CentralHDQM/frontend/`  
-`sudo chcon -Rt httpd_sys_content_t /data/hdqm/`
-
-DB authentication information is placed in this file: `backend/connection_string.txt`, in the first line of said file, in this format: `postgres://<DB_NAME>:<PASSWORD>@<HOST>:<PORT>/<USER>`
-
-
-## API local setup instructions
-
-Before running the API server there should be a `backend/api/private/` folder containing these files:
-* `userkey.pem` - GRID certificate key file
-* `usercert.pem` - GRID certificate file
-
-### Instructions on how to retrieve the certificate and the key:
-
-* Get GRID certificate: https://ca.cern.ch/ca/ You have to use your personal account. **Certificate has to be passwordless**.
-* Instructions on how to get certificate and key files: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookStartingGrid#ObtainingCert
-* Copy paste-ble instructions:
-```
-# Leave Import Password blank
-# PEM passphrase is required to be set
-openssl pkcs12 -in myCertificate.p12 -clcerts -nokeys -out usercert.pem
-openssl pkcs12 -in myCertificate.p12 -nocerts -out userkey.tmp.pem
-openssl rsa -in userkey.tmp.pem -out userkey.pem
-```
-
-### How to get cern_cacert.pem 
-
-This CERN CA bundle is retreived from here: http://linuxsoft.cern.ch/cern/centos/7/cern/x86_64/repoview/CERN-CA-certs.html
-
-Now, this file is used only for OMS requests.
-
-## Daily extraction
-
-HDQM automatically extracts data from EOS on a daily basis. This is done using systemctl timer.  
-A timer `hdqm-extract.timer` launches `hdqm-extract.service` service every day. In order to stop the timer run:  
-```bash
-sudo systemctl stop hdqm-extract.timer
-```
-To get info about a timer run one of these two commands:
-```bash
-sudo systemctl list-timers
-sudo systemctl status hdqm-extract.timer
-```
-
-Show the log of the service:
-
-``` bash
-sudo journalctl -u hdqm-extract
-```
-
-Service configuration files are located here: `/etc/systemd/system/`
-
-### EOS access
-
-**Extraction is performed on behalf of *cmsdqm* user because we need a user that would be in CERN.CH domain to access EOS file system**
-
-User credentials are stored in a keytab file. This file needs to be updated when the password changes. Bellow are the instructions on how to do that:
-
-``` bash
-sudo su cmsdqm
-ktutil
-# Keep in mind the capital letters - they are important!
-# add_entry -password -p cmsdqm@CERN.CH -k 1 -e aes256-cts-hmac-sha1-96 # This does not work anymore?
-add_entry -password -p cmsdqm@CERN.CH -k 1 -e arcfour-hmac
-write_kt /data/hdqm/.keytab
-exit
-# Get the kerberos token. This will grant access to EOS
-kinit -kt /data/hdqm/.keytab cmsdqm
-# Make EOS aware of the new kerberos token
-/usr/bin/eosfusebind -g
-```
-
-``` bash
-# Verify
-klist -kte /data/hdqm/.keytab
-```
-
-More info about kerberos: https://twiki.cern.ch/twiki/bin/view/Main/Kerberos
-
-## How to update
-
-The following script will pull a latest version of the HDQM code from a `https://github.com/cms-DQM/CentralHDQM` repository. It will copy required secret files from `private` directory, and point `current` symlink to the newly created version. 
-
-```bash
-ssh vocms0231
-cd /data/hdqm
-sudo su cmsdqm
-./update.sh
-exit
-sudo systemctl restart hdqm.service
-```
-
-### How to rollback to the old version
-
-In order to rollback to the previous version set `current` symlink to point to the required version folder (in the same directory) and restart the service:
-
-```bash
-cd /data/hdqm
-ln -s -f -n <FOLDER_OF_THE_REQUIRED_VERSION> current
-sudo systemctl restart hdqm.service
-```
