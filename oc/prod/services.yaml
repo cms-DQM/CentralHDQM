@@ -1,0 +1,22 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend-nginx
+  namespace: cms-hdqm-prod
+  labels:
+    app: frontend-nginx
+    app.kubernetes.io/component: frontend-nginx
+    app.kubernetes.io/instance: frontend-nginx
+    app.kubernetes.io/name: frontend-nginx
+    app.openshift.io/runtime-version: latest
+spec:
+  type: ClusterIP
+  ports:
+    - name: 8081-tcp
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: hdqm
+    deployment: hdqm
+

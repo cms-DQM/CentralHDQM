@@ -1,0 +1,36 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: backend
+  namespace: cms-hdqm-prod
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+    - name: latest
+      annotations:
+        openshift.io/imported-from: registry.cern.ch/cms-dqmdc/hdqm-backend
+      from:
+        kind: DockerImage
+        name: registry.cern.ch/cms-dqmdc/hdqm-backend
+      referencePolicy:
+        type: Local
+
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: frontend
+  namespace: cms-hdqm-prod
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+    - name: latest
+      annotations:
+        openshift.io/imported-from: registry.cern.ch/cms-dqmdc/hdqm-frontend
+      from:
+        kind: DockerImage
+        name: registry.cern.ch/cms-dqmdc/hdqm-frontend
+      referencePolicy:
+        type: Local

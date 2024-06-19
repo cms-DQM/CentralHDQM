@@ -1,0 +1,56 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: frontend
+  namespace: cms-hdqm-prod
+  labels:
+    app: frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/instance: frontend
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: hdqm
+    app.openshift.io/runtime: nginx
+    app.openshift.io/runtime-namespace: cms-hdqm-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        deployment: frontend
+    spec:
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: nginx-reverse-proxy-conf
+      containers:
+        - name: frontend
+          resources:
+            requests:
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          ports:
+            - containerPort: 8081
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx
+              readOnly: true
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/cms-hdqm-prod/frontend:latest
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
