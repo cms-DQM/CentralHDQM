@@ -39,7 +39,8 @@ spec:
           imagePullPolicy: Always
           volumeMounts:
             - name: nginx-conf
-              mountPath: /etc/nginx
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
               readOnly: true
           image: >-
             image-registry.openshift-image-registry.svc:5000/cms-hdqm-prod/frontend:latest
