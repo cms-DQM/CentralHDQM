@@ -1,13 +1,13 @@
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: hqdm
+  name: hqdm-route
   namespace: cms-hdqm-prod
   labels:
     app: hdqm
-    app.kubernetes.io/component: hdqm
-    app.kubernetes.io/instance: hdqm
-    app.kubernetes.io/name: hdqm
+    app.kubernetes.io/component: hdqm-route
+    app.kubernetes.io/instance: hdqm-route
+    app.kubernetes.io/name: hdqm-route
     app.openshift.io/runtime-version: latest
   annotations:
     external-dns.alpha.kubernetes.io/target: paas-apps-shard-1.cern.ch
@@ -17,7 +17,7 @@ spec:
   host: cms-hdqm-qa.web.cern.ch
   to:
     kind: Service
-    name: hdqm
+    name: nginx
     weight: 100
   port:
     targetPort: 8081-tcp
