@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nginx-revese-proxy-conf
+  name: nginx-reverse-proxy-conf
   namespace: cms-hdqm-prod
 data:
   nginx.conf: |
