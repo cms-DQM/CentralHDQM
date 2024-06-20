@@ -258,17 +258,17 @@ if __name__ == "__main__":
         fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
-    handler = TimedRotatingFileHandler(
-        LOGPATH, when="h", interval=24, backupCount=int(NLOGS)
-    )
-    handler.setFormatter(formatter)
-    handler.setLevel(LOGLEVEL)
+    if os.getenv("LOG_TO_FILE"):
+        handler = TimedRotatingFileHandler(
+            LOGPATH, when="h", interval=24, backupCount=int(NLOGS)
+        )
+        handler.setFormatter(formatter)
+        handler.setLevel(LOGLEVEL)
+        logger.addHandler(handler)
 
     handler2 = logging.StreamHandler(sys.stdout)
     handler2.setFormatter(formatter)
     handler2.setLevel(LOGLEVEL)
-
-    logger.addHandler(handler)
     logger.addHandler(handler2)
 
     logger.info("Start " + str(__file__))
