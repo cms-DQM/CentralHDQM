@@ -27,7 +27,7 @@ data:
           gzip_min_length         1000;
           gzip_proxied            any;
           gzip_types              text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
-          gzip_buffers 16 8k;          
+          gzip_buffers 16 8k;
 
           upstream app_backend {
               server backend:5000 fail_timeout=0;
@@ -48,7 +48,7 @@ data:
               }
 
               location /api {
-                  proxy_pass http://app_backend;
+                  proxy_pass http://app_backend/api;
                   proxy_hide_header 'Access-Control-Allow-Origin';
                   add_header 'Access-Control-Allow-Origin' '*';
                   proxy_read_timeout 90;
