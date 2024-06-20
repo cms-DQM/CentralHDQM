@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: extractor-cronjob
+  namespace: cms-hdqm-dev
+  labels:
+    app: backend-extractor
+    app.kubernetes.io/component: backend-extractor
+    app.kubernetes.io/instance: backend-extractor
+    app.kubernetes.io/name: backend-extractor
+    app.kubernetes.io/part-of: hdqm
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-namespace: cms-hdqm-dev
+spec:
+  schedule: "0 4 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: eos-storage
+              persistentVolumeClaim:
+                claimName: eos-storage
+          containers:
+          - name: backend-extractor
+            resources:
+              requests:
+                memory: 512Mi
+              limits:
+                memory: 4096Mi
+            command: ['bash']
+            args: ['run.sh', 'extract']
+            envFrom:
+              - secretRef:
+                  name: hdqm-backend-secrets
+              - secretRef:
+                  name: eos-credentials
+            imagePullPolicy: Always
+            volumeMounts:
+              - name: eos-storage
+                readOnly: true
+                mountPath: /eos
+            image: >-
+              image-registry.openshift-image-registry.svc:5000/cms-hdqm-dev/backend:latest
+          restartPolicy: OnFailure
+
