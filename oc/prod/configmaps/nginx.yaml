@@ -37,7 +37,28 @@ data:
               listen 8081;
               server_name localhost;
 
+              # Disable buffering for an authenticating proxy
+              proxy_buffering off;
+
+              # Allow big headers (oauth2-proxy cookies) - OKD routers allow headers up to 32k
+              proxy_buffer_size          32k;
+              proxy_buffers              8 64k;
+              proxy_busy_buffers_size    64k;
+
+              # Do not restrict upload size (consider setting a limit here if application does not need large request bodies)
+              client_max_body_size 0;
+
+              location /oauth2/ {
+                  proxy_pass       http://cern-auth-proxy:4180;    # TODO: must match the Release name used to deploy the cern-auth-proxy service
+                  proxy_set_header Host                    $host;
+                  proxy_set_header X-Scheme                $scheme;
+                  proxy_set_header X-Auth-Request-Redirect $request_uri;
+              }
+
               location / {
+                  auth_request /oauth2/auth;
+                  error_page 401 = /oauth2/start;
+
                   root /usr/share/nginx/html;
                   index index.html;
                   expires -1;
@@ -48,6 +69,9 @@ data:
               }
 
               location /api {
+                  auth_request /oauth2/auth;
+                  error_page 401 = /oauth2/start;
+
                   proxy_pass http://app_backend/api;
                   proxy_hide_header 'Access-Control-Allow-Origin';
                   add_header 'Access-Control-Allow-Origin' '*';
