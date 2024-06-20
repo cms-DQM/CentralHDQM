@@ -14,7 +14,7 @@ metadata:
     haproxy.router.openshift.io/ip_whitelist: ''
     haproxy.router.openshift.io/timeout: 180s
 spec:
-  host: cms-hdqm-qa.web.cern.ch
+  host: cms-hdqm.web.cern.ch
   to:
     kind: Service
     name: nginx
@@ -27,7 +27,7 @@ spec:
   wildcardPolicy: None
 status:
   ingress:
-    - host: cms-hdqm-qa.web.cern.ch
+    - host: cms-hdqm.web.cern.ch
       routerName: apps-shard-1
       conditions:
         - type: Admitted
