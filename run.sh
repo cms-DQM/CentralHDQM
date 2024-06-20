@@ -13,7 +13,7 @@ then
 fi
 
 if [ "$1" = "api" ]; then
-  gunicorn --workers=`nproc` 'backend.api:create_app()' --bind=127.0.0.1:5000
+  gunicorn --workers=`nproc` 'backend.api:create_app()' --bind=0.0.0.0:5000 --access-logfile=- --error-logfile=-
 elif [ "$1" = "extract" ]; then
   python3 backend/dqm_extractor.py
 fi
