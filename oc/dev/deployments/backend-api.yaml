@@ -21,6 +21,8 @@ spec:
       labels:
         app: backend
         deployment: backend
+      annotations:
+        eos.okd.cern.ch/mount-eos-with-credentials-from-secret: eos-credentials
     spec:
       volumes:
         - name: eos-storage
