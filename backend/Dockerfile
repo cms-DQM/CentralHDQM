@@ -1,47 +1,31 @@
-###############################
-# BASE IMAGE FOR OTHER STAGES
-###############################
+# The default python installed in this release is 3.6.9
+# Originally the application was design for 3.6.8, bumping the minor
+# version is not a problem
+FROM ubuntu:18.04
 
-FROM rootproject/root:6.24.06-ubuntu20.04 as base
+ENV LANG=C.UTF-8
 
-# The ROOT installed in the base image was compiled against python3 in ubuntu20.04 base image
-# ROOT's team just installed the latest python version (3.8.x) at build time
-#
-# So in order to control python version (same as development version)
-# we are going to install python 3.6.8 manually
-#
-# Note: Using this base image we can't change python's minor version
-# since root is pre-compiled for python 3.8.x, i.e. we should compile root manually
-# for a different python minor version if we need a different minor version
-ARG PYTHON_VERSION=3.6.8
+ARG ROOT_BIN=root_v6.24.08.Linux-ubuntu18-x86_64-gcc7.5.tar.gz
 
-RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
-    && tar xzvf Python-${PYTHON_VERSION}.tgz \
-    && rm Python-${PYTHON_VERSION}.tgz \
-    && cd Python-${PYTHON_VERSION} \
-    && ./configure \
-    && make -j$(( $(getconf _NPROCESSORS_ONLN) - 2 )) \
-    && make install \
-    && cd .. \
-    && rm -rf Python-${PYTHON_VERSION}
+WORKDIR /opt
 
-# PYTHONDONTWRITEBYTECODE: Prevents Python from writing pyc files to disc
-# PYTHONUNBUFFERED: Prevents Python from buffering stdout and stderr
-ENV PYTHONFAULTHANDLER=1 \
-  PYTHONUNBUFFERED=1 \
-  PYTHONHASHSEED=random \
-  PIP_NO_CACHE_DIR=off \
-  PIP_DISABLE_PIP_VERSION_CHECK=on \
-  PIP_DEFAULT_TIMEOUT=100
+RUN apt-get update -qq \
+ && ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
+ && apt-get -y install wget \
+ && wget https://raw.githubusercontent.com/root-project/root-docker/6.24.06-ubuntu20.04/ubuntu/packages \
+ && apt-get -y install $(cat packages) python3-pip \
+ && rm -rf /var/lib/apt/lists/* \
+ && wget https://root.cern/download/${ROOT_BIN} \
+ && tar -xzvf ${ROOT_BIN} \
+ && rm -f ${ROOT_BIN} \
+ && echo /opt/root/lib >> /etc/ld.so.conf \
+ && ldconfig
 
-###############################
-# RELEASE IMAGE
-###############################
-
-FROM base AS release
-
-# This is to print directly to stdout instead of buffering output
-ENV PYTHONUNBUFFERED 1
+ENV ROOTSYS /opt/root
+ENV PATH $ROOTSYS/bin:$PATH
+ENV PYTHONPATH $ROOTSYS/lib:$PYTHONPATH
+ENV CLING_STANDARD_PCH none
+ENV PYTHONNUNBUFFERED=1
 
 ARG UID=1000
 ARG GID=1000
@@ -59,7 +43,6 @@ WORKDIR $APP_HOME
 COPY requirements.txt $APP_HOME
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
-#RUN pip3 install --no-cache /wheels/*
 
 COPY backend $APP_HOME/backend
 COPY run.sh $APP_HOME
