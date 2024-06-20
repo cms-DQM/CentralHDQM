@@ -62,8 +62,7 @@ def get_rr_run(run: int) -> dict:
     Why not use the runregistry python package?
     """
     logger.info("Get RR data for run %s ..." % run)
-    # TODO: replace with production one once 1.0.0 runregistry is published.
-    url = "https://cmsrunregistry-qa.web.cern.ch/api/runs_filtered_ordered"
+    url = "https://cmsrunregistry.web.cern.ch/api/runs_filtered_ordered"
     request = """
     { 
         "page" : 0,
