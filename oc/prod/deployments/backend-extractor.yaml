@@ -13,8 +13,12 @@ metadata:
     app.openshift.io/runtime-namespace: cms-hdqm-prod
 spec:
   schedule: "0 4 * * *"
+  concurrencyPolicy: "Forbid"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
   jobTemplate:
     spec:
+      backoffLimit: 0
       template:
         metadata:
           labels:
@@ -47,5 +51,5 @@ spec:
                 mountPath: /eos
             image: >-
               image-registry.openshift-image-registry.svc:5000/cms-hdqm-prod/backend:latest
-          restartPolicy: OnFailure
+          restartPolicy: Never
 
