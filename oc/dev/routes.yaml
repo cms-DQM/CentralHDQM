@@ -1,0 +1,36 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: hqdm-route
+  namespace: cms-hdqm-dev
+  labels:
+    app: hdqm
+    app.kubernetes.io/component: hdqm-route
+    app.kubernetes.io/instance: hdqm-route
+    app.kubernetes.io/name: hdqm-route
+    app.openshift.io/runtime-version: latest
+  annotations:
+    external-dns.alpha.kubernetes.io/target: paas-apps-shard-1.cern.ch
+    haproxy.router.openshift.io/ip_whitelist: ''
+    haproxy.router.openshift.io/timeout: 180s
+spec:
+  host: cms-hdqm-dev.web.cern.ch
+  to:
+    kind: Service
+    name: nginx
+    weight: 100
+  port:
+    targetPort: 8081-tcp
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+status:
+  ingress:
+    - host: cms-hdqm-dev.web.cern.ch
+      routerName: apps-shard-1
+      conditions:
+        - type: Admitted
+          status: 'True'
+      wildcardPolicy: None
+      routerCanonicalHostname: router-apps-shard-1.paas-apps-shard-1.cern.ch

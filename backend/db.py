@@ -4,6 +4,7 @@ import os
 import logging
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy import (
     Text,
     Column,
@@ -277,7 +278,20 @@ def check_gui_file(file):
 
 
 # setup DB
-def setup_db():
+def setup_db(db_path):
+    db_path = "/".join(db_path.split("/")[:-1]) + "/postgres"
+    try:
+        engine = sqlalchemy.create_engine(db_path)
+        conn = engine.connect()
+        conn.execute("COMMIT")
+        conn.execute(f"CREATE DATABASE {os.getenv('DB_NAME')}")
+        conn.close()
+        engine.dispose()
+    except ProgrammingError as err:
+        if "already exists" in str(err):
+            print("Database already exists")
+        else:
+            raise err
     Base.metadata.create_all(engine)
 
 
@@ -286,6 +300,12 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv()
-    db_path = os.environ.get("HDQM2_DB_PATH")
+    db_path = get_formatted_db_uri(
+        username=os.getenv("DB_USERNAME"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        db_name=os.getenv("DB_NAME"),
+    )
     create_session(db_path)
-    setup_db()
+    setup_db(db_path)

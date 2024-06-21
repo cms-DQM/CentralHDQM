@@ -1,0 +1,45 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx
+  namespace: cms-hdqm-prod
+  labels:
+    app: nginx
+    app.kubernetes.io/component: nginx
+    app.kubernetes.io/instance: nginx
+    app.kubernetes.io/name: nginx
+    app.openshift.io/runtime-version: latest
+spec:
+  type: ClusterIP
+  ports:
+    - name: 8081-tcp
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: frontend
+    deployment: frontend
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+  namespace: cms-hdqm-prod
+  labels:
+    app: backend
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: backend
+    app.kubernetes.io/name: backend
+    app.openshift.io/runtime-version: latest
+spec:
+  type: ClusterIP
+  ports:
+    - name: 5000-tcp
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
+  selector:
+    app: backend
+    deployment: backend
+
