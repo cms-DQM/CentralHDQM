@@ -5,10 +5,12 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    # As long as we need python 3.6 we need to pin ubuntu 20.04
+    # https://github.com/actions/setup-python/issues/544
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.6"]
 
     steps:
       - uses: actions/checkout@v3
