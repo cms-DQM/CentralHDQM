@@ -1,7 +1,7 @@
-> **Note**
-> The latest up-to-date instructions can be found in [the wiki](./wiki/).
-
 # Central Historic DQM application for CMS detector
+
+> [!WARNING]
+> This project has moved [here](https://gitlab.cern.ch/cms-dqmdc/services/CentralHDQM)
 
 A tool to display trends of CMS DQM quantities over long periods of time.  
 The web application is available here: https://cms-hdqm.web.cern.ch  
